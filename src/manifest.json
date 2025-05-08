@@ -1,0 +1,16 @@
+{
+    "manifest_version": 3,
+    "version": "1.0.0",
+    "name": "Google Form History",
+    "action": {
+        "default_popup": "index.html"
+    },
+    "host_permissions": [
+        "https://docs.google.com/forms/*"
+    ],
+    "permissions": [
+        "tabs",
+        "scripting",
+        "activeTab"
+    ]
+}
