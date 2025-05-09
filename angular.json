@@ -25,7 +25,8 @@
                 "glob": "**/*",
                 "input": "public"
               },
-              "src/manifest.json"
+              "src/manifest.json",
+              "src/background.js"
             ],
             "styles": [
               "src/styles.css"
@@ -84,7 +85,8 @@
                 "glob": "**/*",
                 "input": "public"
               },
-              "src/manifest.json"
+              "src/manifest.json",
+              "src/background.js"
             ],
             "styles": [
               "src/styles.css"
