@@ -1,41 +1,26 @@
 <div class="extension-popup">
-  <!-- Editing Section -->
-  <div class="section editing-section">
-    <h2>Editing</h2>
-    <div class="content">
-      <div *ngIf="isLoading" class="loading">Loading...</div>
-      
-      <div *ngIf="!isLoading && formUrls.length === 0" class="no-forms">
-        <p>No Google Forms URLs saved yet.</p>
-        <p class="hint">Visit a Google Form to automatically save its URL here.</p>
-      </div>
-      
-      <div *ngIf="!isLoading && formUrls.length > 0" class="form-urls">
-        <h3>Saved Google Forms</h3>
-        <ul class="url-list">
-          <li *ngFor="let url of formUrls" class="url-item">
-            <div class="url-info">
-              <span class="form-name" (click)="openForm(url)">{{ getFormName(url) }}</span>
-              <span class="url-text">{{ url }}</span>
-            </div>
-            <button class="remove-btn" (click)="removeUrl(url)" title="Remove URL">
-              &times;
-            </button>
-          </li>
-        </ul>
-        <div class="actions">
-          <button class="clear-all-btn" (click)="clearAllUrls()">Clear All</button>
-        </div>
-      </div>
-    </div>
+  <!-- Navigation Tabs -->
+  <div class="tab-navigation">
+    <button 
+      class="tab-button" 
+      [class.active]="activeTab === 'editing'" 
+      (click)="setActiveTab('editing')">Editing</button>
+    <button 
+      class="tab-button" 
+      [class.active]="activeTab === 'submitted'" 
+      (click)="setActiveTab('submitted')">Submitted</button>
   </div>
 
-  <!-- Submitted Section -->
-  <div class="section submitted-section">
-    <h2>Submitted</h2>
-    <div class="content">
-      <!-- Submitted content will go here -->
-      <p>Previously submitted forms</p>
+  <!-- Tab Content -->
+  <div class="tab-content">
+    <!-- Editing Section -->
+    <div class="section" *ngIf="activeTab === 'editing'">
+      <app-editing></app-editing>
+    </div>
+
+    <!-- Submitted Section -->
+    <div class="section" *ngIf="activeTab === 'submitted'">
+      <app-submitted></app-submitted>
     </div>
   </div>
 </div>
