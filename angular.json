@@ -26,7 +26,8 @@
                 "input": "public"
               },
               "src/manifest.json",
-              "src/background.js"
+              "src/background.js",
+              "src/config.js"
             ],
             "styles": [
               "src/styles.css"
@@ -86,7 +87,8 @@
                 "input": "public"
               },
               "src/manifest.json",
-              "src/background.js"
+              "src/background.js",
+              "src/config.js"
             ],
             "styles": [
               "src/styles.css"

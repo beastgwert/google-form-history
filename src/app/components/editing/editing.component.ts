@@ -19,18 +19,7 @@ export class EditingComponent implements OnInit {
   constructor(private urlStorageService: UrlStorageService, private cdr: ChangeDetectorRef) {}
 
   async ngOnInit() {
-    // Get the current tab URL to check if it's a Google Form
-    chrome.tabs.query({active: true, currentWindow: true}, async (tabs) => {
-      const currentUrl = tabs[0]?.url || '';
-      
-      // If the current URL is a Google Form, add it to storage
-      if (currentUrl && currentUrl.includes('docs.google.com/forms/')) {
-        await this.urlStorageService.addUrl(currentUrl);
-      }
-      
-      // Load all stored URLs
-      this.loadUrls();
-    });
+    this.loadUrls();
   }
 
   async loadUrls() {
