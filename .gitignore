@@ -43,3 +43,10 @@ Thumbs.db
 
 # Instructions
 instructions.txt
+
+# AWS
+/aws-sdk-layer
+/lambda/README.md
+
+# Configuration with sensitive data
+src/config.js

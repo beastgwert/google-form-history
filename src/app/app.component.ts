@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { EditingComponent } from './components/editing/editing.component';
 import { SubmittedComponent } from './components/submitted/submitted.component';
 
+
 @Component({
   selector: 'app-root',
   standalone: true,
@@ -13,6 +14,8 @@ import { SubmittedComponent } from './components/submitted/submitted.component';
 export class AppComponent {
   title = 'google-form-history';
   activeTab: 'editing' | 'submitted' = 'editing';
+
+
 
   setActiveTab(tab: 'editing' | 'submitted') {
     this.activeTab = tab;
