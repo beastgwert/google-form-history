@@ -48,5 +48,3 @@ instructions.txt
 /aws-sdk-layer
 /lambda/README.md
 
-# Configuration with sensitive data
-src/config.js

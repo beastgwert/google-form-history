@@ -24,6 +24,7 @@ exports.handler = async (event) => {
         }
         
         const url = body.url;
+        const userId = body.userId;
         
         if (!url) {
             return {
@@ -36,16 +37,36 @@ exports.handler = async (event) => {
             };
         }
         
-        // Create a unique key for the URL
+        // Use a default folder if no user ID is provided (for backward compatibility)
+        const userFolder = userId || 'anonymous';
+        
+        // Create a unique key for the URL using the user ID as a folder
         const timestamp = new Date().getTime();
-        const key = `urls/${timestamp}-${encodeURIComponent(url).substring(0, 50)}`;
+        
+        // Extract the form ID from the URL
+        let formId = url;
+        
+        // Check if it's a Google Forms URL and extract the form ID
+        if (url.includes('docs.google.com/forms/')) {
+            // Extract the form ID from URLs like:
+            // https://docs.google.com/forms/d/e/FORM_ID/viewform
+            // or https://docs.google.com/forms/d/FORM_ID/edit
+            const match = url.match(/forms\/d(?:\/e)?\/([\w-]+)/);
+            if (match && match[1]) {
+                formId = match[1];
+            }
+        }
+        
+        const key = `users/${userFolder}/urls/${formId}`;
         
         // Prepare the URL content for upload
         const urlData = {
             url: url,
             timestamp: timestamp,
+            userId: userId,
             metadata: {
-                addedAt: new Date().toISOString()
+                addedAt: new Date().toISOString(),
+                userId: userId
             }
         };
         

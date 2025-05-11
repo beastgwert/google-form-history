@@ -1,47 +1,40 @@
 // Background script to capture Google Forms URLs
-import CONFIG from './config.js';
 
-// Constants
-const STORAGE_KEY = 'google_forms_urls';
-const API_ENDPOINT = CONFIG.API_ENDPOINT;
+// Get API endpoints from the manifest
+const manifest = chrome.runtime.getManifest();
+const API_ENDPOINT_UPLOAD_URL = manifest.api_endpoints.upload_url;
 
-// Function to add URL to storage and send to API Gateway
+// Function to add URL by sending directly to API Gateway
 async function addUrl(url) {
-  return new Promise((resolve) => {
-    chrome.storage.local.get([STORAGE_KEY], (result) => {
-      const urls = result[STORAGE_KEY] || [];
-      
-      // Only add the URL if it's not already in the list
-      if (!urls.includes(url)) {
-        console.log("Adding URL to storage: " + url);
-        urls.push(url);
-        
-        // Save to storage
-        chrome.storage.local.set({ [STORAGE_KEY]: urls }, () => {
-          // Send to API Gateway
-          sendUrlToApiGateway(url);
-          resolve(true);
-        });
-      } else {
-        resolve(false);
-      }
-    });
-  });
+  try {
+    console.log("Sending URL to API Gateway: " + url);
+    // Send directly to API Gateway
+    await sendUrlToApiGateway(url);
+    return true;
+  } catch (error) {
+    console.error("Error adding URL:", error);
+    return false;
+  }
 }
+
+
 
 // Function to send URL to API Gateway
 async function sendUrlToApiGateway(url) {
   try {
     console.log('Sending URL to API Gateway:', url);
     
-    // Create a simple object with the URL
-    const payload = { url: url };
+    // Create an object with the URL and user ID
+    const payload = { 
+      url: url,
+      userId: chrome.runtime.id
+    };
     
     // Convert to JSON string
     const jsonPayload = JSON.stringify(payload);
     console.log('Sending payload:', jsonPayload);
     
-    const response = await fetch(API_ENDPOINT, {
+    const response = await fetch(API_ENDPOINT_UPLOAD_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -67,7 +60,8 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   // Check if the URL is a Google Forms URL and the page has finished loading
   if (changeInfo.status === 'complete' && 
       tab.url && 
-      tab.url.includes('docs.google.com/forms/')) {
+      tab.url.includes('docs.google.com/forms/') && 
+      tab.url.includes('viewform')) {
     console.log("Google Form detected: " + tab.url);
     
     // Add URL to storage and send to API Gateway
