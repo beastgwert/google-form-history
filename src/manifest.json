@@ -4,7 +4,8 @@
     "name": "Google Form History",
     "api_endpoints": {
         "upload_url": "https://pe3pi87ox8.execute-api.us-east-1.amazonaws.com/prod/upload-url",
-        "retrieve_urls": "https://pe3pi87ox8.execute-api.us-east-1.amazonaws.com/prod/retrieve-urls"
+        "retrieve_urls": "https://pe3pi87ox8.execute-api.us-east-1.amazonaws.com/prod/retrieve-urls",
+        "delete_url": "https://pe3pi87ox8.execute-api.us-east-1.amazonaws.com/prod/delete-url"
     },
     "action": {
         "default_popup": "index.html"
