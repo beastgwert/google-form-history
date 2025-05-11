@@ -5,6 +5,7 @@ declare const chrome: any;
 
 interface UrlData {
   url: string;
+  title: string;
   timestamp: number;
   userId: string;
   metadata: {
@@ -20,13 +21,16 @@ export class UrlStorageService {
   constructor() { }
 
   /**
-   * Gets all stored URLs from API Gateway
+   * Gets all stored URLs with titles from API Gateway
    */
-  async getUrls(): Promise<string[]> {
+  async getUrls(): Promise<{url: string, title: string}[]> {
     try {
       const urlData = await this.fetchUrlsFromApiGateway();
-      // Extract just the URL strings from the URL data objects
-      return urlData.map(item => item.url);
+      // Extract URL and title from the URL data objects
+      return urlData.map(item => ({
+        url: item.url,
+        title: item.title || 'Unknown Form'
+      }));
     } catch (error) {
       console.error('Error getting URLs:', error);
       return [];

@@ -11,12 +11,12 @@
     <div *ngIf="!isLoading && formUrls.length > 0" class="form-urls">
       <h3>Saved Google Forms</h3>
       <ul class="url-list">
-        <li *ngFor="let url of formUrls" class="url-item">
+        <li *ngFor="let formData of formUrls" class="url-item">
           <div class="url-info">
-            <span class="form-name" (click)="openForm(url)">{{ getFormName(url) }}</span>
-            <span class="url-text">{{ url }}</span>
+            <span class="form-name" (click)="openForm(formData.url)">{{ getFormName(formData) }}</span>
+            <span class="url-text">{{ formData.url }}</span>
           </div>
-          <button class="remove-btn" (click)="removeUrl(url)" title="Remove URL">
+          <button class="remove-btn" (click)="removeUrl(formData.url)" title="Remove URL">
             &times;
           </button>
         </li>

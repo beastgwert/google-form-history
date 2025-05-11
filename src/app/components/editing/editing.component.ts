@@ -2,6 +2,11 @@ import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { UrlStorageService } from '../../services/url-storage.service';
 
+interface FormData {
+  url: string;
+  title: string;
+}
+
 // Chrome extension API types
 declare const chrome: any;
 
@@ -13,7 +18,7 @@ declare const chrome: any;
   styleUrl: './editing.component.css'
 })
 export class EditingComponent implements OnInit {
-  formUrls: string[] = [];
+  formUrls: FormData[] = [];
   isLoading = true;
 
   constructor(private urlStorageService: UrlStorageService, private cdr: ChangeDetectorRef) {}
@@ -42,10 +47,15 @@ export class EditingComponent implements OnInit {
     await this.loadUrls();
   }
 
-  getFormName(url: string): string {
+  getFormName(formData: FormData): string {
+    // Use the title if available, otherwise extract from URL
+    if (formData.title && formData.title !== 'Unknown Form') {
+      return formData.title.length > 40 ? formData.title.substring(0, 40) + '...' : formData.title;
+    }
+    
     try {
-      // Extract form name from URL or return a shortened URL
-      const urlObj = new URL(url);
+      // Fallback to extracting form name from URL
+      const urlObj = new URL(formData.url);
       const pathParts = urlObj.pathname.split('/');
       const formId = pathParts[pathParts.length - 2] || 'Unknown Form';
       return formId.length > 20 ? formId.substring(0, 20) + '...' : formId;

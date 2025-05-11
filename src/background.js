@@ -5,11 +5,12 @@ const manifest = chrome.runtime.getManifest();
 const API_ENDPOINT_UPLOAD_URL = manifest.api_endpoints.upload_url;
 
 // Function to add URL by sending directly to API Gateway
-async function addUrl(url) {
+async function addUrl(url, title) {
   try {
     console.log("Sending URL to API Gateway: " + url);
+    console.log("Form title: " + title);
     // Send directly to API Gateway
-    await sendUrlToApiGateway(url);
+    await sendUrlToApiGateway(url, title);
     return true;
   } catch (error) {
     console.error("Error adding URL:", error);
@@ -17,16 +18,15 @@ async function addUrl(url) {
   }
 }
 
-
-
 // Function to send URL to API Gateway
-async function sendUrlToApiGateway(url) {
+async function sendUrlToApiGateway(url, title) {
   try {
     console.log('Sending URL to API Gateway:', url);
     
-    // Create an object with the URL and user ID
+    // Create an object with the URL, title and user ID
     const payload = { 
       url: url,
+      title: title || 'Unknown Form',
       userId: chrome.runtime.id
     };
     
@@ -64,7 +64,10 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
       tab.url.includes('viewform')) {
     console.log("Google Form detected: " + tab.url);
     
-    // Add URL to storage and send to API Gateway
-    addUrl(tab.url);
+    // Extract the form title from the tab title
+    const formTitle = tab.title ? tab.title.replace(' - Google Forms', '') : 'Unknown Form';
+    
+    // Add URL and title to storage and send to API Gateway
+    addUrl(tab.url, formTitle);
   }
 });

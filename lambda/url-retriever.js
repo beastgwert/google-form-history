@@ -2,6 +2,16 @@ const { S3Client, ListObjectsV2Command, GetObjectCommand } = require('@aws-sdk/c
 const s3Client = new S3Client({ region: 'us-east-1' }); // Replace with your region
 
 exports.handler = async (event) => {
+    // Check if this is a scheduled event from EventBridge Scheduler
+    if (event.source === 'aws.events' || 
+        (event['detail-type'] && event['detail-type'] === 'Scheduled Event')) {
+        console.log('Received scheduled event, no action needed');
+        return {
+            statusCode: 200,
+            body: JSON.stringify({ message: 'Scheduled invocation received, no action taken' })
+        };
+    }
+    
     try {
         const userId = event.queryStringParameters && event.queryStringParameters.userId;
         const userFolder = userId || 'anonymous';

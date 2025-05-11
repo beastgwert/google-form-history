@@ -25,6 +25,7 @@ exports.handler = async (event) => {
         
         const url = body.url;
         const userId = body.userId;
+        const title = body.title || 'Unknown Form';
         
         if (!url) {
             return {
@@ -62,6 +63,7 @@ exports.handler = async (event) => {
         // Prepare the URL content for upload
         const urlData = {
             url: url,
+            title: title,
             timestamp: timestamp,
             userId: userId,
             metadata: {
