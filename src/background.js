@@ -4,14 +4,18 @@
 const manifest = chrome.runtime.getManifest();
 const API_ENDPOINT_UPLOAD_URL = manifest.api_endpoints.upload_url;
 const API_ENDPOINT_DELETE_URL = manifest.api_endpoints.delete_url;
+const API_ENDPOINT_RETRIEVE_URLS = manifest.api_endpoints.retrieve_urls;
 
-// Function to add URL by sending directly to API Gateway
+// Function to add URL by sending directly to API Gateway and updating local storage
 async function addUrl(url, title) {
   try {
     console.log("Sending URL to API Gateway: " + url);
     console.log("Form title: " + title);
     // Send directly to API Gateway
     await sendUrlToApiGateway(url, title);
+    
+    // After successful API call, update local storage
+    await updateLocalStorage();
     return true;
   } catch (error) {
     console.error("Error adding URL:", error);
@@ -56,12 +60,15 @@ async function sendUrlToApiGateway(url, title) {
   }
 }
 
-// Function to delete URL by sending request to API Gateway
+// Function to delete URL by sending request to API Gateway and updating local storage
 async function deleteUrl(url) {
   try {
     console.log("Sending delete request for URL: " + url);
     // Send directly to API Gateway
     await sendDeleteRequestToApiGateway(url);
+    
+    // After successful API call, update local storage
+    await updateLocalStorage();
     return true;
   } catch (error) {
     console.error("Error deleting URL:", error);
@@ -104,6 +111,36 @@ async function sendDeleteRequestToApiGateway(url) {
     return false;
   }
 }
+
+// Function to fetch URLs from API Gateway and update local storage
+async function updateLocalStorage() {
+  try {
+    console.log('Updating local storage with latest URLs from API Gateway');
+    
+    // Fetch URLs from API Gateway
+    const response = await fetch(`${API_ENDPOINT_RETRIEVE_URLS}?userId=${chrome.runtime.id}`);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    const urls = data.urls || [];
+    
+    // Store URLs in chrome.storage.local
+    await chrome.storage.local.set({ 'formUrls': urls });
+    console.log('Successfully updated local storage with', urls.length, 'URLs');
+    return true;
+  } catch (error) {
+    console.error('Error updating local storage:', error);
+    return false;
+  }
+}
+
+// Initialize local storage when extension is loaded
+chrome.runtime.onInstalled.addListener(() => {
+  updateLocalStorage();
+});
 
 // Listen for tab updates
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
