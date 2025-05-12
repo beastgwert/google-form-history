@@ -5,7 +5,8 @@
     "api_endpoints": {
         "upload_url": "https://pe3pi87ox8.execute-api.us-east-1.amazonaws.com/prod/upload-url",
         "retrieve_urls": "https://pe3pi87ox8.execute-api.us-east-1.amazonaws.com/prod/retrieve-urls",
-        "delete_url": "https://pe3pi87ox8.execute-api.us-east-1.amazonaws.com/prod/delete-url"
+        "delete_url": "https://pe3pi87ox8.execute-api.us-east-1.amazonaws.com/prod/delete-url",
+        "upload_submission": "https://pe3pi87ox8.execute-api.us-east-1.amazonaws.com/prod/upload-submission"
     },
     "action": {
         "default_popup": "index.html"
@@ -22,5 +23,11 @@
         "scripting",
         "activeTab",
         "storage"
+    ],
+    "content_scripts": [
+        {
+            "matches": ["https://docs.google.com/forms/*/formResponse*"],
+            "js": ["content-script.js"]
+        }
     ]
 }

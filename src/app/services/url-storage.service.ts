@@ -39,9 +39,6 @@ export class UrlStorageService {
       return [];
     }
   }
-  
-  // The fetchUrlsFromApiGateway method has been removed as it's no longer needed
-  // URL fetching and storage is now handled by the background script
 
   /**
    * Updates local storage by removing a URL
@@ -104,21 +101,6 @@ export class UrlStorageService {
     } catch (error) {
       console.error('Error removing URL:', error);
       throw error; // Re-throw to allow caller to handle
-    }
-  }
-
-  /**
-   * Clears all stored URLs from local storage
-   * 
-   * Note: This only clears local storage. API Gateway clearing is not implemented yet.
-   */
-  async clearUrls(): Promise<void> {
-    try {
-      // Clear the formUrls from storage
-      await chrome.storage.local.set({ 'formUrls': [] });
-      console.log('All URLs cleared from local storage');
-    } catch (error) {
-      console.error('Error clearing URLs from local storage:', error);
     }
   }
 

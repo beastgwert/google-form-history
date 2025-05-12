@@ -5,6 +5,7 @@ const manifest = chrome.runtime.getManifest();
 const API_ENDPOINT_UPLOAD_URL = manifest.api_endpoints.upload_url;
 const API_ENDPOINT_DELETE_URL = manifest.api_endpoints.delete_url;
 const API_ENDPOINT_RETRIEVE_URLS = manifest.api_endpoints.retrieve_urls;
+const API_ENDPOINT_UPLOAD_SUBMISSION = manifest.api_endpoints.upload_submission;
 
 // Function to add URL by sending directly to API Gateway and updating local storage
 async function addUrl(url, title) {
@@ -142,6 +143,54 @@ chrome.runtime.onInstalled.addListener(() => {
   updateLocalStorage();
 });
 
+// Function to send submission URL to API Gateway
+async function sendSubmissionToApiGateway(editUrl, formId) {
+  try {
+    console.log('Sending submission URL to API Gateway:', editUrl);
+    
+    // Create an object with the edit URL, form ID, and user ID
+    const payload = { 
+      editUrl: editUrl,
+      formId: formId,
+      userId: chrome.runtime.id
+    };
+    
+    // Convert to JSON string
+    const jsonPayload = JSON.stringify(payload);
+    console.log('Sending submission payload:', jsonPayload);
+    
+    const response = await fetch(API_ENDPOINT_UPLOAD_SUBMISSION, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: jsonPayload
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    console.log('Successfully sent submission URL to API Gateway:', data);
+    return true;
+  } catch (error) {
+    console.error('Error sending submission URL to API Gateway:', error);
+    return false;
+  }
+}
+
+// Listen for messages from content script
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.action === 'uploadSubmission') {
+    console.log('Received uploadSubmission request:', message);
+    sendSubmissionToApiGateway(message.editUrl, message.formId)
+      .then(result => sendResponse({ success: result }))
+      .catch(error => sendResponse({ success: false, error: error.message }));
+    return true; // Indicates we will send a response asynchronously
+  }
+});
+
 // Listen for tab updates
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   // Only process if the page has finished loading and there's a URL
@@ -149,7 +198,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     // Check if the URL is a Google Forms URL
     if (tab.url.includes('docs.google.com/forms/')) {
       // Case 1: Form view - save the form URL
-      if (tab.url.includes('viewform')) {
+      if (tab.url.includes('viewform') && !tab.url.includes('edit')) {
         console.log("Google Form detected: " + tab.url);
         
         // Extract the form title from the tab title
@@ -159,12 +208,22 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
         addUrl(tab.url, formTitle);
       }
       
-      // Case 2: Form submission - delete the form URL
+      // Case 2: Form submission - delete the form URL and inject content script
       else if (tab.url.includes('formResponse')) {
         console.log("Google Form submission detected: " + tab.url);
         
         // Delete URL from storage and send delete request to API Gateway
         deleteUrl(tab.url);
+        
+        // Inject the content script to detect the "Edit your response" link
+        chrome.scripting.executeScript({
+          target: { tabId: tabId },
+          files: ['content-script.js']
+        }).then(() => {
+          console.log('Content script injected successfully');
+        }).catch(error => {
+          console.error('Error injecting content script:', error);
+        });
       }
     }
   }

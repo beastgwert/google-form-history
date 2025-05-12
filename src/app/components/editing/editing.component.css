@@ -57,6 +57,11 @@
   font-weight: bold;
   cursor: pointer;
   color: #1a73e8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  display: inline-block;
 }
 
 .form-name:hover {

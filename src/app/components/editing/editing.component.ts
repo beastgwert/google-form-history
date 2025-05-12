@@ -49,17 +49,7 @@ export class EditingComponent implements OnInit {
     });
   }
 
-  async clearAllUrls() {
-    // Optimistic UI update - clear all URLs from the UI immediately
-    this.formUrls = [];
-    
-    // Then send the clear request to the cloud
-    this.urlStorageService.clearUrls().catch(error => {
-      console.error('Error clearing URLs:', error);
-      // If there's an error, reload the URLs to ensure UI is in sync
-      this.loadUrls();
-    });
-  }
+  // The clearAllUrls method has been removed
 
   getFormName(formData: FormData): string {
     // Use the title if available, otherwise extract from URL

@@ -9,7 +9,6 @@
     </div>
     
     <div *ngIf="!isLoading && formUrls.length > 0" class="form-urls">
-      <h3>Saved Google Forms</h3>
       <ul class="url-list">
         <li *ngFor="let formData of formUrls" class="url-item">
           <div class="url-info">
@@ -21,9 +20,7 @@
           </button>
         </li>
       </ul>
-      <div class="actions">
-        <button class="clear-all-btn" (click)="clearAllUrls()">Clear All</button>
-      </div>
+      <!-- Clear All button has been removed -->
     </div>
   </div>
 </div>
