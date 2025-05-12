@@ -6,6 +6,7 @@ const API_ENDPOINT_UPLOAD_URL = manifest.api_endpoints.upload_url;
 const API_ENDPOINT_DELETE_URL = manifest.api_endpoints.delete_url;
 const API_ENDPOINT_RETRIEVE_URLS = manifest.api_endpoints.retrieve_urls;
 const API_ENDPOINT_UPLOAD_SUBMISSION = manifest.api_endpoints.upload_submission;
+const API_ENDPOINT_RETRIEVE_SUBMISSIONS = manifest.api_endpoints.retrieve_submissions;
 
 // Function to add URL by sending directly to API Gateway and updating local storage
 async function addUrl(url, title) {
@@ -141,6 +142,7 @@ async function updateLocalStorage() {
 // Initialize local storage when extension is loaded
 chrome.runtime.onInstalled.addListener(() => {
   updateLocalStorage();
+  updateSubmissionsInLocalStorage();
 });
 
 // Function to send submission URL to API Gateway
@@ -174,9 +176,38 @@ async function sendSubmissionToApiGateway(editUrl, formId, formTitle) {
     
     const data = await response.json();
     console.log('Successfully sent submission URL to API Gateway:', data);
+    
+    // After successful submission, update submissions in local storage
+    await updateSubmissionsInLocalStorage();
+    
     return true;
   } catch (error) {
     console.error('Error sending submission URL to API Gateway:', error);
+    return false;
+  }
+}
+
+// Function to fetch submissions from API Gateway and update local storage
+async function updateSubmissionsInLocalStorage() {
+  try {
+    console.log('Updating local storage with latest submissions from API Gateway');
+    
+    // Fetch submissions from API Gateway
+    const response = await fetch(`${API_ENDPOINT_RETRIEVE_SUBMISSIONS}?userId=${chrome.runtime.id}`);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    const submissions = data.submissions || [];
+    
+    // Store submissions in chrome.storage.local
+    await chrome.storage.local.set({ 'submissions': submissions });
+    console.log('Successfully updated local storage with', submissions.length, 'submissions');
+    return true;
+  } catch (error) {
+    console.error('Error updating submissions in local storage:', error);
     return false;
   }
 }

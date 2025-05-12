@@ -1,7 +1,19 @@
 <div class="submitted-section">
   <h2>Submitted</h2>
   <div class="content">
-    <!-- Submitted content will go here -->
-    <p>Previously submitted forms</p>
+    <div *ngIf="isLoading" class="loading">
+      Loading submissions...
+    </div>
+    
+    <div *ngIf="!isLoading && submissions.length === 0" class="empty-state">
+      <p>No submitted forms found</p>
+    </div>
+    
+    <div *ngIf="!isLoading && submissions.length > 0" class="submissions-list">
+      <div *ngFor="let submission of submissions" class="submission-item" (click)="openForm(submission.editUrl)">
+        <div class="submission-title">{{ getFormName(submission) }}</div>
+        <div class="submission-date">{{ getFormattedDate(submission.timestamp) }}</div>
+      </div>
+    </div>
   </div>
 </div>

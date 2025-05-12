@@ -5,3 +5,38 @@
 .content {
   padding: 10px;
 }
+
+.submissions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.submission-item {
+  padding: 12px;
+  border-radius: 6px;
+  background-color: #f5f5f5;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.submission-item:hover {
+  background-color: #e0e0e0;
+}
+
+.submission-title {
+  font-weight: 500;
+  margin-bottom: 4px;
+  color: #333;
+}
+
+.submission-date {
+  font-size: 12px;
+  color: #666;
+}
+
+.loading, .empty-state {
+  padding: 20px 0;
+  text-align: center;
+  color: #666;
+}
