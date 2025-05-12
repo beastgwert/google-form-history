@@ -61,6 +61,14 @@
   background-color: rgba(0, 0, 0, 0.1);
 }
 
+.icon-button.active {
+  background-color: rgba(103, 58, 183, 0.1);
+}
+
+.icon-button.active img {
+  filter: invert(34%) sepia(39%) saturate(1261%) hue-rotate(227deg) brightness(87%) contrast(92%);
+}
+
 .sort-alpha-icon, .sort-date-icon {
   font-size: 0.8rem;
   display: flex;

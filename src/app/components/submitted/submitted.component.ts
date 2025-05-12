@@ -1,6 +1,7 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormService, SubmissionData } from '../../services/form.service';
+import { Subscription } from 'rxjs';
 
 // Using SubmissionData interface from FormService
 
@@ -14,8 +15,9 @@ declare const chrome: any;
   templateUrl: './submitted.component.html',
   styleUrl: './submitted.component.css'
 })
-export class SubmittedComponent implements OnInit {
+export class SubmittedComponent implements OnInit, OnDestroy {
   submissions: SubmissionData[] = [];
+  private subscription: Subscription | undefined;
 
   constructor(private formService: FormService, private cdr: ChangeDetectorRef) {}
 
@@ -29,6 +31,16 @@ export class SubmittedComponent implements OnInit {
     console.log("Loaded submissions: ", this.submissions);
     // Manually trigger change detection
     this.cdr.detectChanges();
+    
+    // Subscribe to the submittedForms$ observable to get updates when sorting changes
+    this.subscription = this.formService.submittedForms$.subscribe(updatedForms => {
+      this.submissions = updatedForms.map(form => ({
+        formTitle: form.title,
+        editUrl: form.url,
+        timestamp: new Date(form.timestamp).toISOString()
+      }));
+      this.cdr.detectChanges();
+    });
   }
 
   // Store original title to use for tooltip if needed
@@ -74,5 +86,12 @@ export class SubmittedComponent implements OnInit {
 
   openForm(url: string) {
     chrome.tabs.create({ url });
+  }
+  
+  ngOnDestroy() {
+    // Unsubscribe to prevent memory leaks
+    if (this.subscription) {
+      this.subscription.unsubscribe();
+    }
   }
 }

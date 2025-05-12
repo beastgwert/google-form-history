@@ -6,10 +6,10 @@
       <h1 class="header-title">Google Form Tracker</h1>
     </div>
     <div class="header-right">
-      <button class="icon-button" title="Sort Alphabetically">
+      <button class="icon-button" [class.active]="sortMode === 'alphabetical'" title="Sort Alphabetically" (click)="sortAlphabetically()">
         <img src="assets/alphabetical.svg" alt="Sort Alphabetically" width="16" height="16">
       </button>
-      <button class="icon-button" title="Sort by Date">
+      <button class="icon-button" [class.active]="sortMode === 'date'" title="Sort by Date" (click)="sortByDate()">
         <img src="assets/calendar.svg" alt="Sort by Date" width="16" height="16">
       </button>
     </div>

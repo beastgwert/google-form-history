@@ -1,6 +1,7 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormService } from '../../services/form.service';
+import { Subscription } from 'rxjs';
 
 // Local interface for component use - different from FormService's FormData
 interface FormItem {
@@ -19,8 +20,9 @@ declare const chrome: any;
   templateUrl: './editing.component.html',
   styleUrl: './editing.component.css'
 })
-export class EditingComponent implements OnInit {
+export class EditingComponent implements OnInit, OnDestroy {
   formUrls: FormItem[] = [];
+  private subscription: Subscription | undefined;
 
   constructor(private formService: FormService, private cdr: ChangeDetectorRef) {}
 
@@ -42,6 +44,16 @@ export class EditingComponent implements OnInit {
     console.log("Loaded URLs: ", this.formUrls);
     // Manually trigger change detection
     this.cdr.detectChanges();
+    
+    // Subscribe to the editingForms$ observable to get updates when sorting changes
+    this.subscription = this.formService.editingForms$.subscribe(updatedForms => {
+      this.formUrls = updatedForms.map(item => ({
+        url: item.url,
+        title: item.title,
+        timestamp: new Date(item.timestamp).toISOString()
+      }));
+      this.cdr.detectChanges();
+    });
   }
 
   async removeUrl(url: string) {
@@ -98,6 +110,13 @@ export class EditingComponent implements OnInit {
       return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
     } catch {
       return 'Unknown Date';
+    }
+  }
+  
+  ngOnDestroy() {
+    // Unsubscribe to prevent memory leaks
+    if (this.subscription) {
+      this.subscription.unsubscribe();
     }
   }
 }
