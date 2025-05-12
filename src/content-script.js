@@ -71,12 +71,23 @@ function processEditLink(href) {
   const editUrl = href;
   const formId = extractFormId(editUrl);
   
+  // Get the form title from the document title
+  // Usually Google Forms have titles in the format "Form Name - Google Forms"
+  let formTitle = document.title;
+  // Remove the "- Google Forms" suffix if present
+  formTitle = formTitle.replace(/ - Google Forms$/, '');
+  // If it's a submission page, it might have a different format
+  formTitle = formTitle.replace(/Form submitted$/, '').trim();
+  
+  console.log('Form title:', formTitle);
+  
   if (formId) {
     // Get the API endpoint from the manifest
     chrome.runtime.sendMessage({
       action: 'uploadSubmission',
       editUrl: editUrl,
-      formId: formId
+      formId: formId,
+      formTitle: formTitle
     }, response => {
       console.log('Response from background script:', response);
     });

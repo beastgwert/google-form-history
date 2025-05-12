@@ -144,14 +144,15 @@ chrome.runtime.onInstalled.addListener(() => {
 });
 
 // Function to send submission URL to API Gateway
-async function sendSubmissionToApiGateway(editUrl, formId) {
+async function sendSubmissionToApiGateway(editUrl, formId, formTitle) {
   try {
     console.log('Sending submission URL to API Gateway:', editUrl);
     
-    // Create an object with the edit URL, form ID, and user ID
+    // Create an object with the edit URL, form ID, form title, and user ID
     const payload = { 
       editUrl: editUrl,
       formId: formId,
+      formTitle: formTitle || 'Unknown Form',
       userId: chrome.runtime.id
     };
     
@@ -184,7 +185,7 @@ async function sendSubmissionToApiGateway(editUrl, formId) {
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'uploadSubmission') {
     console.log('Received uploadSubmission request:', message);
-    sendSubmissionToApiGateway(message.editUrl, message.formId)
+    sendSubmissionToApiGateway(message.editUrl, message.formId, message.formTitle)
       .then(result => sendResponse({ success: result }))
       .catch(error => sendResponse({ success: false, error: error.message }));
     return true; // Indicates we will send a response asynchronously

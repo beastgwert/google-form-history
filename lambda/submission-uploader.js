@@ -26,6 +26,7 @@ exports.handler = async (event) => {
         const editUrl = body.editUrl;
         const userId = body.userId;
         const formId = body.formId;
+        const formTitle = body.formTitle || 'Unknown Form';
         
         if (!editUrl || !userId || !formId) {
             return {
@@ -44,6 +45,7 @@ exports.handler = async (event) => {
         // Create the object to store in S3
         const submissionData = {
             editUrl: editUrl,
+            formTitle: formTitle,
             timestamp: new Date().toISOString()
         };
         
