@@ -1,14 +1,8 @@
 <div class="editing-section">
   <h2>Editing</h2>
   <div class="content">
-    <div *ngIf="isLoading" class="loading">Loading...</div>
     
-    <div *ngIf="!isLoading && formUrls.length === 0" class="no-forms">
-      <p>No Google Forms URLs saved yet.</p>
-      <p class="hint">Visit a Google Form to automatically save its URL here.</p>
-    </div>
-    
-    <div *ngIf="!isLoading && formUrls.length > 0" class="form-urls">
+    <div class="form-urls">
       <ul class="url-list">
         <li *ngFor="let formData of formUrls" class="url-item">
           <div class="url-info">
@@ -20,7 +14,6 @@
           </button>
         </li>
       </ul>
-      <!-- Clear All button has been removed -->
     </div>
   </div>
 </div>

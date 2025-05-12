@@ -19,7 +19,6 @@ declare const chrome: any;
 })
 export class EditingComponent implements OnInit {
   formUrls: FormData[] = [];
-  isLoading = true;
 
   constructor(private urlStorageService: UrlStorageService, private cdr: ChangeDetectorRef) {}
 
@@ -29,9 +28,7 @@ export class EditingComponent implements OnInit {
 
   async loadUrls() {
     console.log("Loading URLs...");
-    this.isLoading = true;
     this.formUrls = await this.urlStorageService.getUrls();
-    this.isLoading = false;
     console.log("Loaded URLs: ", this.formUrls);
     // Manually trigger change detection
     this.cdr.detectChanges();

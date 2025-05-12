@@ -20,7 +20,6 @@ declare const chrome: any;
 })
 export class SubmittedComponent implements OnInit {
   submissions: SubmissionData[] = [];
-  isLoading = true;
 
   constructor(private submissionStorageService: SubmissionStorageService, private cdr: ChangeDetectorRef) {}
 
@@ -30,9 +29,7 @@ export class SubmittedComponent implements OnInit {
 
   async loadSubmissions() {
     console.log("Loading submissions...");
-    this.isLoading = true;
     this.submissions = await this.submissionStorageService.getSubmissions();
-    this.isLoading = false;
     console.log("Loaded submissions: ", this.submissions);
     // Manually trigger change detection
     this.cdr.detectChanges();
