@@ -5,6 +5,7 @@ import { UrlStorageService } from '../../services/url-storage.service';
 interface FormData {
   url: string;
   title: string;
+  timestamp: string;
 }
 
 // Chrome extension API types
@@ -28,7 +29,15 @@ export class EditingComponent implements OnInit {
 
   async loadUrls() {
     console.log("Loading URLs...");
-    this.formUrls = await this.urlStorageService.getUrls();
+    const urls = await this.urlStorageService.getUrls();
+    
+    // Add timestamp to each form data item
+    this.formUrls = urls.map(item => ({
+      url: item.url,
+      title: item.title,
+      timestamp: new Date().toISOString() // Add current timestamp since it's not provided by the service
+    }));
+    
     console.log("Loaded URLs: ", this.formUrls);
     // Manually trigger change detection
     this.cdr.detectChanges();
@@ -45,8 +54,6 @@ export class EditingComponent implements OnInit {
       this.loadUrls();
     });
   }
-
-  // The clearAllUrls method has been removed
 
   getFormName(formData: FormData): string {
     // Use the title if available, otherwise extract from URL
@@ -67,5 +74,15 @@ export class EditingComponent implements OnInit {
 
   openForm(url: string) {
     chrome.tabs.create({ url });
+  }
+
+  getFormattedDate(timestamp: string): string {
+    try {
+      const date = new Date(timestamp);
+      // Format date without seconds
+      return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    } catch {
+      return 'Unknown Date';
+    }
   }
 }

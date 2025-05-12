@@ -3,17 +3,15 @@
   <div class="content">
     
     <div class="form-urls">
-      <ul class="url-list">
-        <li *ngFor="let formData of formUrls" class="url-item">
-          <div class="url-info">
-            <span class="form-name" (click)="openForm(formData.url)">{{ getFormName(formData) }}</span>
-            <span class="url-text">{{ formData.url }}</span>
+      <div class="url-list">
+        <div *ngFor="let formData of formUrls" class="url-item">
+          <div class="url-info" (click)="openForm(formData.url)">
+            <div class="form-name">{{ getFormName(formData) }}</div>
+            <div class="form-date">{{ getFormattedDate(formData.timestamp) }}</div>
           </div>
-          <button class="remove-btn" (click)="removeUrl(formData.url)" title="Remove URL">
-            &times;
-          </button>
-        </li>
-      </ul>
+          <img src="assets/trash.svg" class="trash-icon" (click)="removeUrl(formData.url)">
+        </div>
+      </div>
     </div>
   </div>
 </div>

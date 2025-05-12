@@ -27,7 +27,8 @@
               },
               "src/manifest.json",
               "src/background.js",
-              "src/content-script.js"
+              "src/content-script.js",
+              "src/assets"
             ],
             "styles": [
               "src/styles.css"
@@ -88,7 +89,8 @@
               },
               "src/manifest.json",
               "src/background.js",
-              "src/content-script.js"
+              "src/content-script.js",
+              "src/assets"
             ],
             "styles": [
               "src/styles.css"

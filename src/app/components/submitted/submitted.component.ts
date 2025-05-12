@@ -55,7 +55,7 @@ export class SubmittedComponent implements OnInit {
   getFormattedDate(timestamp: string): string {
     try {
       const date = new Date(timestamp);
-      return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+      return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
     } catch {
       return 'Unknown Date';
     }
