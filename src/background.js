@@ -70,6 +70,7 @@ async function deleteUrl(url) {
     await sendDeleteRequestToApiGateway(url);
     
     // After successful API call, update local storage
+    // This will also update the badge
     await updateLocalStorage();
     return true;
   } catch (error) {
@@ -132,10 +133,25 @@ async function updateLocalStorage() {
     // Store URLs in chrome.storage.local
     await chrome.storage.local.set({ 'formUrls': urls });
     console.log('Successfully updated local storage with', urls.length, 'URLs');
+    
+    // Update the badge with the number of editing forms
+    updateBadge(urls.length);
+    
     return true;
   } catch (error) {
     console.error('Error updating local storage:', error);
     return false;
+  }
+}
+
+// Function to update the badge with the number of editing forms
+function updateBadge(count) {
+  if (count > 0) {
+    chrome.action.setBadgeText({ text: count.toString() });
+    chrome.action.setBadgeBackgroundColor({ color: '#444444' });
+    chrome.action.setBadgeTextColor({ color: '#FFFFFF' });
+  } else {
+    chrome.action.setBadgeText({ text: '' });
   }
 }
 
