@@ -1,12 +1,8 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { SubmissionStorageService } from '../../services/submission-storage.service';
+import { FormService, SubmissionData } from '../../services/form.service';
 
-interface SubmissionData {
-  formTitle: string;
-  editUrl: string;
-  timestamp: string;
-}
+// Using SubmissionData interface from FormService
 
 // Chrome extension API types
 declare const chrome: any;
@@ -21,7 +17,7 @@ declare const chrome: any;
 export class SubmittedComponent implements OnInit {
   submissions: SubmissionData[] = [];
 
-  constructor(private submissionStorageService: SubmissionStorageService, private cdr: ChangeDetectorRef) {}
+  constructor(private formService: FormService, private cdr: ChangeDetectorRef) {}
 
   async ngOnInit() {
     this.loadSubmissions();
@@ -29,27 +25,42 @@ export class SubmittedComponent implements OnInit {
 
   async loadSubmissions() {
     console.log("Loading submissions...");
-    this.submissions = await this.submissionStorageService.getSubmissions();
+    this.submissions = await this.formService.getSubmissions();
     console.log("Loaded submissions: ", this.submissions);
     // Manually trigger change detection
     this.cdr.detectChanges();
   }
 
-  getFormName(submission: SubmissionData): string {
+  // Store original title to use for tooltip if needed
+  getOriginalFormName(submission: SubmissionData): string {
     // Use the title if available, otherwise extract from URL
     if (submission.formTitle && submission.formTitle !== 'Unknown Form') {
-      return submission.formTitle.length > 40 ? submission.formTitle.substring(0, 40) + '...' : submission.formTitle;
+      return submission.formTitle;
     }
     
     try {
       // Fallback to extracting form name from URL
       const urlObj = new URL(submission.editUrl);
       const pathParts = urlObj.pathname.split('/');
-      const formId = pathParts[pathParts.length - 2] || 'Unknown Form';
-      return formId.length > 20 ? formId.substring(0, 20) + '...' : formId;
+      return pathParts[pathParts.length - 2] || 'Unknown Form';
     } catch {
       return 'Unknown Form';
     }
+  }
+
+  getFormName(submission: SubmissionData): string {
+    const originalName = this.getOriginalFormName(submission);
+    
+    // Return truncated version for display
+    if (originalName.length > 30) {
+      return originalName.substring(0, 30) + '...';
+    }
+    return originalName;
+  }
+  
+  isTitleTruncated(submission: SubmissionData): boolean {
+    const originalName = this.getOriginalFormName(submission);
+    return originalName.length > 30;
   }
 
   getFormattedDate(timestamp: string): string {

@@ -75,6 +75,7 @@
   cursor: pointer;
   opacity: 0.7;
   transition: opacity 0.2s;
+  margin-left: 0.5rem;
 }
 
 .trash-icon:hover {

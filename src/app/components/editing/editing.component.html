@@ -1,17 +1,15 @@
 <div class="editing-section">
-  <h2>Editing</h2>
-  <div class="content">
-    
-    <div class="form-urls">
-      <div class="url-list">
-        <div *ngFor="let formData of formUrls" class="url-item">
-          <div class="url-info" (click)="openForm(formData.url)">
-            <div class="form-name">{{ getFormName(formData) }}</div>
-            <div class="form-date">{{ getFormattedDate(formData.timestamp) }}</div>
-          </div>
-          <img src="assets/trash.svg" class="trash-icon" (click)="removeUrl(formData.url)">
-        </div>
+<div class="content">
+<div class="form-urls">
+  <div class="url-list">
+    <div *ngFor="let formData of formUrls" class="url-item" [title]="isTitleTruncated(formData) ? getOriginalFormName(formData) : ''">
+      <div class="url-info" (click)="openForm(formData.url)">
+        <div class="form-name">{{ getFormName(formData) }}</div>
+        <div class="form-date">{{ getFormattedDate(formData.timestamp) }}</div>
       </div>
+      <img src="assets/trash.svg" class="trash-icon" (click)="removeUrl(formData.url)">
     </div>
   </div>
+</div>
+</div>
 </div>

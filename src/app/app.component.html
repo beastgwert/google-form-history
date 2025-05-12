@@ -15,30 +15,33 @@
     </div>
   </div>
 
-  <!-- Navigation Tabs Panel -->
-  <div class="tab-panel">
-    <div class="tab-navigation">
-      <button 
-        class="tab-button" 
-        [class.active]="activeTab === 'editing'" 
-        (click)="setActiveTab('editing')">Editing</button>
-      <button 
-        class="tab-button" 
-        [class.active]="activeTab === 'submitted'" 
-        (click)="setActiveTab('submitted')">Submitted</button>
-    </div>
-  </div>
-
-  <!-- Tab Content -->
-  <div class="tab-content">
-    <!-- Editing Section -->
-    <div class="section" *ngIf="activeTab === 'editing'">
-      <app-editing></app-editing>
+  <!-- Tab Container -->
+  <div class="tab-container">
+    <!-- Navigation Tabs Panel -->
+    <div class="tab-panel">
+      <div class="tab-navigation">
+        <button 
+          class="tab-button" 
+          [class.active]="activeTab === 'editing'" 
+          (click)="setActiveTab('editing')">Editing</button>
+        <button 
+          class="tab-button" 
+          [class.active]="activeTab === 'submitted'" 
+          (click)="setActiveTab('submitted')">Submitted</button>
+      </div>
     </div>
 
-    <!-- Submitted Section -->
-    <div class="section" *ngIf="activeTab === 'submitted'">
-      <app-submitted></app-submitted>
+    <!-- Tab Content -->
+    <div class="tab-content">
+      <!-- Editing Section -->
+      <div class="section" *ngIf="activeTab === 'editing'">
+        <app-editing></app-editing>
+      </div>
+
+      <!-- Submitted Section -->
+      <div class="section" *ngIf="activeTab === 'submitted'">
+        <app-submitted></app-submitted>
+      </div>
     </div>
   </div>
 </div>

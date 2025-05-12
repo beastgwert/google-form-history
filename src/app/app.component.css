@@ -73,6 +73,14 @@
   height: 16px;
 }
 
+/* Tab container */
+.tab-container {
+  padding: 1rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
 /* Tab panel */
 .tab-panel {
   background-color: #fff;
@@ -94,18 +102,17 @@
   font-weight: 500;
   color: #666;
   cursor: pointer;
-  transition: all 0.2s;
   position: relative;
   outline: none;
 }
 
 .tab-button:hover {
   background-color: #f9f9f9;
-  color: #1a73e8;
+  color: #673AB7;
 }
 
 .tab-button.active {
-  color: #1a73e8;
+  color: #673AB7;
   font-weight: 600;
 }
 

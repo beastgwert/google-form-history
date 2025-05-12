@@ -228,8 +228,14 @@ async function updateSubmissionsInLocalStorage() {
   }
 }
 
-// Listen for messages from content script
+// Listen for messages from content script and popup
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  // Handle badge update requests from the popup
+  if (message.action === 'updateBadge') {
+    updateBadge(message.count);
+    sendResponse({ success: true });
+    return;
+  }
   if (message.action === 'uploadSubmission') {
     console.log('Received uploadSubmission request:', message);
     sendSubmissionToApiGateway(message.editUrl, message.formId, message.formTitle)
