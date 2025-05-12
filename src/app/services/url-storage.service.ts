@@ -44,11 +44,38 @@ export class UrlStorageService {
   // URL fetching and storage is now handled by the background script
 
   /**
+   * Updates local storage by removing a URL
+   * This is used for optimistic UI updates
+   */
+  async updateLocalStorageAfterRemove(url: string): Promise<void> {
+    try {
+      // Get current URLs from storage
+      const result = await chrome.storage.local.get('formUrls');
+      const urls = result.formUrls || [];
+      
+      // Filter out the URL to remove
+      const filteredUrls = urls.filter(item => item.url !== url);
+      
+      // Update storage with filtered URLs
+      await chrome.storage.local.set({ 'formUrls': filteredUrls });
+      
+      console.log('URL removed from local storage:', url);
+    } catch (error) {
+      console.error('Error updating local storage:', error);
+      throw error; // Re-throw to allow caller to handle
+    }
+  }
+
+  /**
    * Removes a URL from storage by sending a request to the delete-url endpoint
+   * Also updates local storage
    */
   async removeUrl(url: string): Promise<void> {
     try {
-      // Get API endpoints from the manifest
+      // Update local storage first (this happens quickly for UI responsiveness)
+      await this.updateLocalStorageAfterRemove(url);
+      
+      // Then send the delete request to the API Gateway
       const manifest = chrome.runtime.getManifest();
       const deleteUrlEndpoint = manifest.api_endpoints.delete_url;
       
@@ -73,20 +100,10 @@ export class UrlStorageService {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
       
-      // After successful API call, update local storage
-      // Get current URLs from storage
-      const result = await chrome.storage.local.get('formUrls');
-      const urls = result.formUrls || [];
-      
-      // Filter out the URL to remove
-      const filteredUrls = urls.filter(item => item.url !== url);
-      
-      // Update storage with filtered URLs
-      await chrome.storage.local.set({ 'formUrls': filteredUrls });
-      
-      console.log('URL successfully removed from API and local storage:', url);
+      console.log('URL successfully removed from API:', url);
     } catch (error) {
       console.error('Error removing URL:', error);
+      throw error; // Re-throw to allow caller to handle
     }
   }
 

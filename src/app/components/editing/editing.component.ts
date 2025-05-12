@@ -38,13 +38,27 @@ export class EditingComponent implements OnInit {
   }
 
   async removeUrl(url: string) {
-    await this.urlStorageService.removeUrl(url);
-    await this.loadUrls();
+    // Optimistic UI update - remove the URL from the UI immediately
+    this.formUrls = this.formUrls.filter(item => item.url !== url);
+    
+    // Then send the delete request to the cloud
+    this.urlStorageService.removeUrl(url).catch(error => {
+      console.error('Error removing URL:', error);
+      // If there's an error, reload the URLs to ensure UI is in sync
+      this.loadUrls();
+    });
   }
 
   async clearAllUrls() {
-    await this.urlStorageService.clearUrls();
-    await this.loadUrls();
+    // Optimistic UI update - clear all URLs from the UI immediately
+    this.formUrls = [];
+    
+    // Then send the clear request to the cloud
+    this.urlStorageService.clearUrls().catch(error => {
+      console.error('Error clearing URLs:', error);
+      // If there's an error, reload the URLs to ensure UI is in sync
+      this.loadUrls();
+    });
   }
 
   getFormName(formData: FormData): string {
