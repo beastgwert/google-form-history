@@ -17,15 +17,30 @@ export interface SubmissionData {
   timestamp: string;
 }
 
+export interface SavedFormResponse {
+  formId: string;
+  url: string;
+  title: string;
+  timestamp: string;
+  status: string;
+  questions: {
+    text: string;
+    answer: string;
+    type: string;
+  }[];
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class FormService {
   private editingFormsSubject = new BehaviorSubject<FormData[]>([]);
   private submittedFormsSubject = new BehaviorSubject<FormData[]>([]);
+  private savedResponsesSubject = new BehaviorSubject<SavedFormResponse[]>([]);
   
   editingForms$ = this.editingFormsSubject.asObservable();
   submittedForms$ = this.submittedFormsSubject.asObservable();
+  savedResponses$ = this.savedResponsesSubject.asObservable();
 
   constructor() {
     // Load initial data
@@ -64,8 +79,8 @@ export class FormService {
   async getSubmissions(): Promise<SubmissionData[]> {
     try {
       // Get submissions from chrome.storage.local
-      const result = await chrome.storage.local.get('submissions');
-      const submissions = result['submissions'] || [];
+      const result = await chrome.storage.local.get('formSubmissions');
+      const submissions = result['formSubmissions'] || [];
       
       // Sort submissions by timestamp (newest first)
       const sortedSubmissions = submissions.sort((a, b) => {
@@ -83,6 +98,30 @@ export class FormService {
       return sortedSubmissions;
     } catch (error) {
       console.error('Error getting submissions from local storage:', error);
+      return [];
+    }
+  }
+  
+  /**
+   * Gets all saved form responses from chrome.storage.local
+   */
+  async getSavedResponses(): Promise<SavedFormResponse[]> {
+    try {
+      // Get saved responses from chrome.storage.local
+      const result = await chrome.storage.local.get('savedFormResponses');
+      const savedResponses = result['savedFormResponses'] || [];
+      
+      // Sort by timestamp (newest first)
+      const sortedResponses = savedResponses.sort((a, b) => {
+        return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
+      });
+
+      // Update the BehaviorSubject
+      this.savedResponsesSubject.next(sortedResponses);
+      
+      return sortedResponses;
+    } catch (error) {
+      console.error('Error getting saved responses from local storage:', error);
       return [];
     }
   }
@@ -115,9 +154,10 @@ export class FormService {
   }
 
   private loadForms() {
-    // Load both editing forms and submitted forms
+    // Load editing forms, submitted forms, and saved responses
     this.getUrls().catch(error => console.error('Error loading editing forms:', error));
     this.getSubmissions().catch(error => console.error('Error loading submitted forms:', error));
+    this.getSavedResponses().catch(error => console.error('Error loading saved responses:', error));
   }
 
   sortEditingFormsAlphabetically() {
@@ -149,12 +189,30 @@ export class FormService {
    * This should be called whenever the number of editing forms changes
    */
   updateBadgeCount() {
-    const count = this.editingFormsSubject.value.length;
+    const count = this.editingFormsSubject.value.length + this.savedResponsesSubject.value.length;
     // Send a message to the background script to update the badge
     chrome.runtime.sendMessage({ 
       action: 'updateBadge', 
       count: count 
     });
+  }
+  
+  /**
+   * Sorts saved responses alphabetically by form title
+   */
+  sortSavedResponsesAlphabetically() {
+    const responses = [...this.savedResponsesSubject.value];
+    responses.sort((a, b) => a.title.localeCompare(b.title));
+    this.savedResponsesSubject.next(responses);
+  }
+  
+  /**
+   * Sorts saved responses by date (newest first)
+   */
+  sortSavedResponsesByDate() {
+    const responses = [...this.savedResponsesSubject.value];
+    responses.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    this.savedResponsesSubject.next(responses);
   }
   
   /**

@@ -28,6 +28,7 @@
               "src/manifest.json",
               "src/background.js",
               "src/content-script.js",
+              "src/form-capture-script.js",
               "src/assets"
             ],
             "styles": [
@@ -90,6 +91,7 @@
               "src/manifest.json",
               "src/background.js",
               "src/content-script.js",
+              "src/form-capture-script.js",
               "src/assets"
             ],
             "styles": [

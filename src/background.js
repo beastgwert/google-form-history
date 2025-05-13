@@ -219,11 +219,48 @@ async function updateSubmissionsInLocalStorage() {
     const submissions = data.submissions || [];
     
     // Store submissions in chrome.storage.local
-    await chrome.storage.local.set({ 'submissions': submissions });
+    await chrome.storage.local.set({ 'formSubmissions': submissions });
     console.log('Successfully updated local storage with', submissions.length, 'submissions');
+    
     return true;
   } catch (error) {
     console.error('Error updating submissions in local storage:', error);
+    return false;
+  }
+}
+
+// Function to save form responses
+async function saveFormResponses(formData) {
+  try {
+    console.log('Saving form responses:', formData);
+    
+    // First, get existing saved responses
+    const storage = await chrome.storage.local.get('savedFormResponses');
+    const savedResponses = storage.savedFormResponses || [];
+    
+    // Add timestamp to the form data
+    const responseWithTimestamp = {
+      ...formData,
+      timestamp: new Date().toISOString(),
+      status: 'saved' // to distinguish from submitted forms
+    };
+    
+    // Add to the array of saved responses
+    savedResponses.push(responseWithTimestamp);
+    
+    // Save back to storage
+    await chrome.storage.local.set({ 'savedFormResponses': savedResponses });
+    
+    console.log('Successfully saved form responses. Total saved:', savedResponses.length);
+    
+    // Update the badge to include saved responses
+    const urlsStorage = await chrome.storage.local.get('formUrls');
+    const formUrls = urlsStorage.formUrls || [];
+    updateBadge(formUrls.length + savedResponses.length);
+    
+    return true;
+  } catch (error) {
+    console.error('Error saving form responses:', error);
     return false;
   }
 }
@@ -243,22 +280,25 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       .catch(error => sendResponse({ success: false, error: error.message }));
     return true; // Indicates we will send a response asynchronously
   }
+  if (message.action === 'saveFormResponses') {
+    console.log('Received saveFormResponses request:', message);
+    saveFormResponses(message.formData)
+      .then(result => sendResponse({ success: result }))
+      .catch(error => sendResponse({ success: false, error: error.message }));
+    return true; // Indicates we will send a response asynchronously
+  }
 });
 
 // Listen for tab updates
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-  // Only process if the page has finished loading and there's a URL
   if (changeInfo.status === 'complete' && tab.url) {
-    // Check if the URL is a Google Forms URL
     if (tab.url.includes('docs.google.com/forms/')) {
       // Case 1: Form view - save the form URL
       if (tab.url.includes('viewform') && !tab.url.includes('edit')) {
         console.log("Google Form detected: " + tab.url);
         
-        // Extract the form title from the tab title
         const formTitle = tab.title ? tab.title.replace(' - Google Forms', '') : 'Unknown Form';
         
-        // Add URL and title to storage and send to API Gateway
         addUrl(tab.url, formTitle);
       }
       
@@ -266,10 +306,8 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
       else if (tab.url.includes('formResponse') && tab.url.includes('/u/0')) {
         console.log("Google Form submission detected: " + tab.url);
         
-        // Delete URL from storage and send delete request to API Gateway
         deleteUrl(tab.url);
         
-        // Inject the content script to detect the "Edit your response" link
         chrome.scripting.executeScript({
           target: { tabId: tabId },
           files: ['content-script.js']
