@@ -250,13 +250,7 @@ async function saveFormResponses(formData) {
     
     // Save back to storage
     await chrome.storage.local.set({ 'savedFormResponses': savedResponses });
-    
     console.log('Successfully saved form responses. Total saved:', savedResponses.length);
-    
-    // Update the badge to include saved responses
-    const urlsStorage = await chrome.storage.local.get('formUrls');
-    const formUrls = urlsStorage.formUrls || [];
-    updateBadge(formUrls.length + savedResponses.length);
     
     return true;
   } catch (error) {

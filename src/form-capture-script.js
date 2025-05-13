@@ -102,62 +102,86 @@ function extractFormId(url) {
 
 // Function to add the save button
 function addSaveButton() {
-  console.log('Looking for form navigation container to add save button...');
+  console.log('Looking for "Clear form" span to add save button before it...');
   
-  // Directly find the container with class "lRwqcd" that holds the submit button
-  const container = document.querySelector('.lRwqcd');
+  // Find the span with "Clear form" text
+  const allSpans = document.querySelectorAll('span');
+  let clearFormSpan = null;
   
-  // If we found the container
-  if (container) {
-    console.log('Found container for save button with class lRwqcd');
+  for (const span of allSpans) {
+    if (span.textContent === 'Clear form') {
+      clearFormSpan = span;
+      console.log('Found "Clear form" span:', span);
+      break;
+    }
+  }
+  
+  // If we found the "Clear form" span
+  if (clearFormSpan) {
+    console.log('Found "Clear form" span, looking for nearest button element...');
     
-    // Create our save button
-    const saveButton = document.createElement('div');
-    saveButton.setAttribute('role', 'button');
+    // Find the closest button element
+    let currentElement = clearFormSpan;
+    let buttonElement = null;
     
-    // Apply Google Forms button styling
-    saveButton.className = 'UQuaGc Y5sE8d QvWxOd'; // Google Forms button classes
+    // Look for an element with role="button" by traversing up the DOM, identifies the "Clear form" button
+    while (currentElement && !buttonElement) {
+      if (currentElement.getAttribute('role') === 'button') {
+        buttonElement = currentElement;
+        break;
+      }
+  
+      if (!buttonElement) {
+        currentElement = currentElement.parentNode;
+      }
+    }
     
-    // Apply additional styles to match the submit button
-    saveButton.style.fontFamily = '"Google Sans", Roboto, Arial, sans-serif';
-    saveButton.style.fontSize = '14px';
-    saveButton.style.fontWeight = '500';
-    saveButton.style.letterSpacing = '0.25px';
-    saveButton.style.lineHeight = '36px';
-    saveButton.style.borderRadius = '4px';
-    saveButton.style.cursor = 'pointer';
-    saveButton.style.display = 'inline-block';
-    saveButton.style.textAlign = 'center';
-    saveButton.style.marginRight = '14px';
-    saveButton.style.color = '#fff';
-    saveButton.style.padding = '0 24px'; // Add some padding for the text
-    saveButton.textContent = 'Save Responses';
+    // Find the parent container to insert our button
+    const parentContainer = buttonElement.parentNode;
     
-    // Append the save button to the container
-    container.appendChild(saveButton);
-    
-    // Add click event
-    saveButton.addEventListener('click', function(event) {
-      event.preventDefault();
-      event.stopPropagation();
+    if (parentContainer) {
+      console.log('Found parent container for save button');
       
-      // Extract form data
-      const formData = extractFormData();
+      // Create our save button
+      const saveButton = document.createElement('div');
+      saveButton.setAttribute('role', 'button');
+      saveButton.textContent = 'Save';
+      saveButton.style.marginRight = '1rem';
       
-      // Send to background script
-      chrome.runtime.sendMessage({
-        action: 'saveFormResponses',
-        formData: formData
-      }, response => {
-        console.log('Response from background script:', response);
-        // Show confirmation to user
-        alert('Your responses have been saved!');
+      if (buttonElement.classList && buttonElement.classList.length) {
+        buttonElement.classList.forEach(className => {
+          saveButton.classList.add(className);
+        });
+      }
+      
+      // Insert our save button before the clear form button
+      parentContainer.insertBefore(saveButton, buttonElement);
+      
+      // Add click event
+      saveButton.addEventListener('click', function(event) {
+        event.preventDefault();
+        event.stopPropagation();
+        
+        // Extract form data
+        const formData = extractFormData();
+        
+        // Send to background script
+        chrome.runtime.sendMessage({
+          action: 'saveFormResponses',
+          formData: formData
+        }, response => {
+          console.log('Response from background script:', response);
+          // Show confirmation to user
+          alert('Your responses have been saved!');
+        });
       });
-    });
-    
-    console.log('Save button added successfully');
+      
+      console.log('Save button added successfully');
+    } else {
+      console.error('Could not find parent container for the "Clear form" span');
+    }
   } else {
-    console.error('Could not find suitable container for save button');
+    console.error('Could not find "Clear form" span');
   }
 }
 

@@ -29,28 +29,6 @@ function extractFormId(url) {
 function detectEditResponseLink() {
   console.log('Checking for "Edit your response" link...');
   
-  // Try multiple approaches to find the edit link
-  
-  // Approach 1: Look for the div with class "c2gzEf" that contains the edit link
-  const editContainer = document.querySelector('.c2gzEf');
-  
-  if (editContainer) {
-    console.log('class c2gzEf found');
-    // Find the "Edit your response" link inside this container
-    const editLink = editContainer.querySelector('a');
-    
-    if (editLink && editLink.textContent.includes('Edit your response')) {
-      processEditLink(editLink.href);
-      return;
-    } else {
-      console.log('Edit link not found in the container with class c2gzEf');
-    }
-  } else {
-    console.log('Edit container with class c2gzEf not found on this page');
-  }
-  
-  // Approach 2: Look for any link that contains "Edit your response" text
-  console.log('Trying alternative approach to find edit link...');
   const allLinks = document.querySelectorAll('a');
   for (const link of allLinks) {
     if (link.textContent.includes('Edit your response')) {
