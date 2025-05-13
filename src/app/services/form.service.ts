@@ -179,7 +179,7 @@ export class FormService {
       const hours12 = hours % 12 || 12; // Convert to 12-hour format
       const timeString = `${hours12}:${minutes} ${ampm}`;
       
-      return formattedDate + ' ' + timeString;
+      return formattedDate + ' | ' + timeString;
     } catch {
       return 'Unknown Date';
     }

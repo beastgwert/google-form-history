@@ -263,7 +263,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
       }
       
       // Case 2: Form submission - delete the form URL and inject content script
-      else if (tab.url.includes('formResponse')) {
+      else if (tab.url.includes('formResponse') && tab.url.includes('/u/0')) {
         console.log("Google Form submission detected: " + tab.url);
         
         // Delete URL from storage and send delete request to API Gateway
