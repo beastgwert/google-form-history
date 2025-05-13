@@ -1,9 +1,9 @@
 .submitted-section {
-  margin-bottom: 20px;
+  margin-bottom: 0;
 }
 
 .content {
-  padding: 10px;
+  padding: 0;
 }
 
 .submissions-list {
@@ -16,17 +16,17 @@
   padding: 10px;
   background-color: #f5f5f5;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: background-color 0.2s, transform 0.1s;
   border-bottom: 1px solid #e0e0e0;
   margin-bottom: 0;
+  border-radius: 6px;
+  margin: 4px 0;
 }
 
 .submission-item:hover {
-  background-color: #e0e0e0;
-}
-
-.submission-item:last-child {
-  border-bottom: none;
+  background-color: #e8e8e8;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .submission-title {

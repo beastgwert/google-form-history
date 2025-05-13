@@ -23,11 +23,17 @@
         <button 
           class="tab-button" 
           [class.active]="activeTab === 'editing'" 
-          (click)="setActiveTab('editing')">Editing</button>
+          (click)="setActiveTab('editing')">
+          <img src="assets/editing.svg" alt="Editing Icon" class="tab-icon">
+          <span>In Progress</span>
+        </button>
         <button 
           class="tab-button" 
           [class.active]="activeTab === 'submitted'" 
-          (click)="setActiveTab('submitted')">Submitted</button>
+          (click)="setActiveTab('submitted')">
+          <img src="assets/submitted.svg" alt="Submitted Icon" class="tab-icon">
+          <span>Submitted</span>
+        </button>
       </div>
     </div>
 
