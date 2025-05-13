@@ -114,9 +114,23 @@ function addSaveButton() {
     // Create our save button
     const saveButton = document.createElement('div');
     saveButton.setAttribute('role', 'button');
-    saveButton.className = 'appsMaterialWizButtonEl appsMaterialWizButtonPaperbuttonEl appsMaterialWizButtonPaperbuttonFilled'; // Standard Google Forms button classes
-    saveButton.style.marginRight = '12px'; // Add some spacing
-    saveButton.style.backgroundColor = '#4285f4'; // Google blue
+    
+    // Apply Google Forms button styling
+    saveButton.className = 'UQuaGc Y5sE8d QvWxOd'; // Google Forms button classes
+    
+    // Apply additional styles to match the submit button
+    saveButton.style.fontFamily = '"Google Sans", Roboto, Arial, sans-serif';
+    saveButton.style.fontSize = '14px';
+    saveButton.style.fontWeight = '500';
+    saveButton.style.letterSpacing = '0.25px';
+    saveButton.style.lineHeight = '36px';
+    saveButton.style.borderRadius = '4px';
+    saveButton.style.cursor = 'pointer';
+    saveButton.style.display = 'inline-block';
+    saveButton.style.textAlign = 'center';
+    saveButton.style.marginRight = '14px';
+    saveButton.style.color = '#fff';
+    saveButton.style.padding = '0 24px'; // Add some padding for the text
     saveButton.textContent = 'Save Responses';
     
     // Append the save button to the container
