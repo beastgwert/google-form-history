@@ -78,7 +78,20 @@ export class SubmittedComponent implements OnInit, OnDestroy {
   getFormattedDate(timestamp: string): string {
     try {
       const date = new Date(timestamp);
-      return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+      // Format date to show only last two digits of year (MM/DD/YY)
+      const month = date.getMonth() + 1;
+      const day = date.getDate();
+      const year = date.getFullYear().toString().slice(-2);
+      const formattedDate = `${month}/${day}/${year}`;
+      
+      // Format time with single-digit hours (no leading zeros)
+      const hours = date.getHours();
+      const minutes = date.getMinutes().toString().padStart(2, '0');
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      const hours12 = hours % 12 || 12; // Convert to 12-hour format
+      const timeString = `${hours12}:${minutes} ${ampm}`;
+      
+      return formattedDate + ' ' + timeString;
     } catch {
       return 'Unknown Date';
     }
