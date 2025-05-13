@@ -1,8 +1,8 @@
 <div class="submitted-section">
 <div class="content">
 <div class="submissions-list">
-  <div *ngFor="let submission of submissions" class="submission-item" (click)="openForm(submission.editUrl)" [title]="isTitleTruncated(submission) ? getOriginalFormName(submission) : ''">
-    <div class="submission-title">{{ getFormName(submission) }}</div>
+  <div *ngFor="let submission of submissions" class="submission-item" (click)="openForm(submission.editUrl)">
+    <div #titleElement class="submission-title" [title]="isTitleTruncated(submission, titleElement) ? getOriginalFormName(submission) : ''">{{ getFormName(submission) }}</div>
     <div class="submission-date">{{ getFormattedDate(submission.timestamp) }}</div>
   </div>
 </div>

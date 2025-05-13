@@ -156,6 +156,34 @@ export class FormService {
       count: count 
     });
   }
+  
+  /**
+   * Formats a date string with MM/DD/YY format and time with single-digit hours
+   * @param timestamp ISO string or any valid date string
+   * @returns Formatted date and time string
+   */
+  formatDate(timestamp: string): string {
+    try {
+      const date = new Date(timestamp);
+      
+      // Format date to show only last two digits of year (MM/DD/YY)
+      const month = date.getMonth() + 1;
+      const day = date.getDate();
+      const year = date.getFullYear().toString().slice(-2);
+      const formattedDate = `${month}/${day}/${year}`;
+      
+      // Format time with single-digit hours (no leading zeros)
+      const hours = date.getHours();
+      const minutes = date.getMinutes().toString().padStart(2, '0');
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      const hours12 = hours % 12 || 12; // Convert to 12-hour format
+      const timeString = `${hours12}:${minutes} ${ampm}`;
+      
+      return formattedDate + ' ' + timeString;
+    } catch {
+      return 'Unknown Date';
+    }
+  }
 
   /**
    * Removes a URL from storage by sending a request to the delete-url endpoint

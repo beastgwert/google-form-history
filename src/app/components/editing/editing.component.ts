@@ -85,18 +85,19 @@ export class EditingComponent implements OnInit, OnDestroy {
   }
 
   getFormName(formData: FormItem): string {
-    const originalName = this.getOriginalFormName(formData);
-    
-    // Return truncated version for display
-    if (originalName.length > 30) {
-      return originalName.substring(0, 30) + '...';
-    }
-    return originalName;
+    // Just return the original name - truncation will be handled by CSS
+    return this.getOriginalFormName(formData);
   }
   
-  isTitleTruncated(formData: FormItem): boolean {
-    const originalName = this.getOriginalFormName(formData);
-    return originalName.length > 30;
+  // This will be called from the template to check if title should show tooltip
+  isTitleTruncated(formData: FormItem, element?: HTMLElement): boolean {
+    if (element) {
+      // DOM-based overflow detection
+      return element.offsetWidth < element.scrollWidth;
+    }
+    
+    // Fallback to the original name for tooltip content
+    return true;
   }
 
   openForm(url: string) {
@@ -104,25 +105,7 @@ export class EditingComponent implements OnInit, OnDestroy {
   }
 
   getFormattedDate(timestamp: string): string {
-    try {
-      const date = new Date(timestamp);
-      // Format date to show only last two digits of year (MM/DD/YY)
-      const month = date.getMonth() + 1;
-      const day = date.getDate();
-      const year = date.getFullYear().toString().slice(-2);
-      const formattedDate = `${month}/${day}/${year}`;
-      
-      // Format time with single-digit hours (no leading zeros)
-      const hours = date.getHours();
-      const minutes = date.getMinutes().toString().padStart(2, '0');
-      const ampm = hours >= 12 ? 'PM' : 'AM';
-      const hours12 = hours % 12 || 12; // Convert to 12-hour format
-      const timeString = `${hours12}:${minutes} ${ampm}`;
-      
-      return formattedDate + ' ' + timeString;
-    } catch {
-      return 'Unknown Date';
-    }
+    return this.formService.formatDate(timestamp);
   }
   
   ngOnDestroy() {
