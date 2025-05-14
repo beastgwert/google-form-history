@@ -4,8 +4,43 @@ import { BehaviorSubject } from 'rxjs';
 // Chrome extension API types
 declare const chrome: any;
 
+// Helper function to extract form ID from a Google Form URL
+function extractFormId(url: string): string {
+  try {
+    // Extract form ID from various Google Forms URL formats
+    const urlObj = new URL(url);
+    const pathname = urlObj.pathname;
+    
+    // Format: /forms/u/0/d/e/[FORM_ID]/formResponse (submitted form)
+    if (pathname.includes('/forms/u/0/d/e/')) {
+      const match = pathname.match(/\/forms\/u\/\d+\/d\/e\/([^/]+)/);
+      if (match && match[1]) return match[1];
+    }
+    
+    // Format: /forms/d/e/[FORM_ID]/viewform
+    if (pathname.includes('/forms/d/e/')) {
+      const match = pathname.match(/\/forms\/d\/e\/([^/]+)/);
+      if (match && match[1]) return match[1];
+    }
+    
+    // Format: /forms/d/[FORM_ID]/viewform
+    if (pathname.includes('/forms/d/')) {
+      const match = pathname.match(/\/forms\/d\/([^/]+)/);
+      if (match && match[1]) return match[1];
+    }
+    
+    // If no match found, use the whole pathname as a fallback
+    return pathname.replace(/\//g, '_');
+  } catch (error) {
+    console.error('Error extracting form ID:', error);
+    // Generate a unique ID based on the URL string if extraction fails
+    return url.replace(/[^a-zA-Z0-9]/g, '_');
+  }
+}
+
 export interface FormData {
   id?: string;
+  formId?: string;
   url: string;
   title: string;
   timestamp: number;
@@ -58,6 +93,7 @@ export class FormService {
       
       // Map to FormData format
       const formData = urlData.map(item => ({
+        formId: item.formId,
         url: item.url,
         title: item.title || 'Unknown Form',
         timestamp: item.timestamp || Date.now()
@@ -132,21 +168,32 @@ export class FormService {
    */
   private async updateLocalStorageAfterRemove(url: string): Promise<void> {
     try {
+      // Extract form ID from URL
+      const formId = extractFormId(url);
+      console.log('Extracted form ID for removal:', formId);
+      
       // Get current URLs from storage
       const result = await chrome.storage.local.get('formUrls');
       const urls = result['formUrls'] || [];
       
-      // Filter out the URL to remove
-      const filteredUrls = urls.filter(item => item.url !== url);
+      // Filter out the form with matching ID
+      const filteredUrls = urls.filter(item => item.formId !== formId);
       
       // Update storage with filtered URLs
       await chrome.storage.local.set({ 'formUrls': filteredUrls });
       
       // Update the BehaviorSubject
-      const updatedForms = this.editingFormsSubject.value.filter(form => form.url !== url);
+      const updatedForms = this.editingFormsSubject.value.filter(form => {
+        // Check if form has formId, if not fall back to URL comparison
+        if (form.formId) {
+          return form.formId !== formId;
+        } else {
+          return form.url !== url;
+        }
+      });
       this.editingFormsSubject.next(updatedForms);
       
-      console.log('URL removed from local storage:', url);
+      console.log('Form removed from local storage. Form ID:', formId);
     } catch (error) {
       console.error('Error updating local storage:', error);
       throw error; // Re-throw to allow caller to handle
@@ -244,40 +291,15 @@ export class FormService {
   }
 
   /**
-   * Removes a URL from storage by sending a request to the delete-url endpoint
-   * Also updates local storage and the badge count
+   * Removes a URL from local storage
+   * Also updates the badge count
    */
   async removeUrl(url: string): Promise<void> {
     try {
-      // Update local storage first (this happens quickly for UI responsiveness)
+      // Update local storage
       await this.updateLocalStorageAfterRemove(url);
       
-      // Then send the delete request to the API Gateway
-      const manifest = chrome.runtime.getManifest();
-      const deleteUrlEndpoint = manifest['api_endpoints']['delete_url'];
-      
-      // Create payload for the delete request
-      const payload = { 
-        url: url,
-        userId: chrome.runtime.id
-      };
-      
-      console.log('Sending delete request to API Gateway for URL:', url);
-      
-      // Send delete request to API Gateway
-      const response = await fetch(deleteUrlEndpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
-      });
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-      
-      console.log('URL successfully removed from API:', url);
+      console.log('URL successfully removed from local storage:', url);
       
       // Update the badge count after successful deletion
       this.updateBadgeCount();

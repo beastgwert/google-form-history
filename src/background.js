@@ -1,23 +1,78 @@
 // Background script to capture Google Forms URLs and detect form submissions
 
-// Get API endpoints from the manifest
-const manifest = chrome.runtime.getManifest();
-const API_ENDPOINT_UPLOAD_URL = manifest.api_endpoints.upload_url;
-const API_ENDPOINT_DELETE_URL = manifest.api_endpoints.delete_url;
-const API_ENDPOINT_RETRIEVE_URLS = manifest.api_endpoints.retrieve_urls;
-const API_ENDPOINT_UPLOAD_SUBMISSION = manifest.api_endpoints.upload_submission;
-const API_ENDPOINT_RETRIEVE_SUBMISSIONS = manifest.api_endpoints.retrieve_submissions;
+// Function to extract form ID from a Google Form URL
+function extractFormId(url) {
+  try {
+    // Extract form ID from various Google Forms URL formats
+    const urlObj = new URL(url);
+    const pathname = urlObj.pathname;
+    
+    // Format: /forms/u/0/d/e/[FORM_ID]/formResponse (submitted form)
+    if (pathname.includes('/forms/u/0/d/e/')) {
+      const match = pathname.match(/\/forms\/u\/\d+\/d\/e\/([^/]+)/);
+      if (match && match[1]) return match[1];
+    }
+    
+    // Format: /forms/d/e/[FORM_ID]/viewform
+    if (pathname.includes('/forms/d/e/')) {
+      const match = pathname.match(/\/forms\/d\/e\/([^/]+)/);
+      if (match && match[1]) return match[1];
+    }
+    
+    // Format: /forms/d/[FORM_ID]/viewform
+    if (pathname.includes('/forms/d/')) {
+      const match = pathname.match(/\/forms\/d\/([^/]+)/);
+      if (match && match[1]) return match[1];
+    }
+    
+    // If no match found, use the whole pathname as a fallback
+    return pathname.replace(/\//g, '_');
+  } catch (error) {
+    console.error('Error extracting form ID:', error);
+    // Generate a unique ID based on the URL string if extraction fails
+    return url.replace(/[^a-zA-Z0-9]/g, '_');
+  }
+}
 
-// Function to add URL by sending directly to API Gateway and updating local storage
+// Function to add URL to local storage
 async function addUrl(url, title) {
   try {
-    console.log("Sending URL to API Gateway: " + url);
+    console.log("Adding URL to local storage: " + url);
     console.log("Form title: " + title);
-    // Send directly to API Gateway
-    await sendUrlToApiGateway(url, title);
     
-    // After successful API call, update local storage
-    await updateLocalStorage();
+    // Extract form ID from URL
+    const formId = extractFormId(url);
+    console.log("Extracted form ID: " + formId);
+    
+    // Get existing form URLs from local storage
+    const storage = await chrome.storage.local.get('formUrls');
+    const formUrls = storage.formUrls || [];
+    
+    // Check if form ID already exists
+    const existingIndex = formUrls.findIndex(item => item.formId === formId);
+    
+    if (existingIndex >= 0) {
+      // Update existing entry
+      formUrls[existingIndex].url = url; // Update URL in case it changed
+      formUrls[existingIndex].title = title || 'Unknown Form';
+      formUrls[existingIndex].lastUpdated = new Date().toISOString();
+    } else {
+      // Add new entry
+      formUrls.push({
+        formId: formId,
+        url: url,
+        title: title || 'Unknown Form',
+        dateAdded: new Date().toISOString(),
+        lastUpdated: new Date().toISOString()
+      });
+    }
+    
+    // Save back to local storage
+    await chrome.storage.local.set({ 'formUrls': formUrls });
+    
+    // Update badge
+    updateBadge(formUrls.length);
+    
     return true;
   } catch (error) {
     console.error("Error adding URL:", error);
@@ -25,53 +80,36 @@ async function addUrl(url, title) {
   }
 }
 
-// Function to send URL to API Gateway
-async function sendUrlToApiGateway(url, title) {
-  try {
-    console.log('Sending URL to API Gateway:', url);
-    
-    // Create an object with the URL, title and user ID
-    const payload = { 
-      url: url,
-      title: title || 'Unknown Form',
-      userId: chrome.runtime.id
-    };
-    
-    // Convert to JSON string
-    const jsonPayload = JSON.stringify(payload);
-    console.log('Sending payload:', jsonPayload);
-    
-    const response = await fetch(API_ENDPOINT_UPLOAD_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: jsonPayload
-    });
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    console.log('Successfully sent URL to API Gateway:', data);
-    return true;
-  } catch (error) {
-    console.error('Error sending URL to API Gateway:', error);
-    return false;
-  }
-}
+// This function has been removed as we're no longer sending URLs to API Gateway
 
-// Function to delete URL by sending request to API Gateway and updating local storage
+// Function to delete URL from local storage
 async function deleteUrl(url) {
   try {
-    console.log("Sending delete request for URL: " + url);
-    // Send directly to API Gateway
-    await sendDeleteRequestToApiGateway(url);
+    console.log("Deleting URL from local storage: " + url);
     
-    // After successful API call, update local storage
-    // This will also update the badge
-    await updateLocalStorage();
+    // Extract form ID from URL if it's a URL, otherwise assume it's already a formId
+    let formId;
+    if (url.startsWith('http')) {
+      formId = extractFormId(url);
+      console.log("Extracted form ID for deletion: " + formId);
+    } else {
+      formId = url;
+      console.log("Using provided form ID for deletion: " + formId);
+    }
+    
+    // Get existing form URLs from local storage
+    const storage = await chrome.storage.local.get('formUrls');
+    let formUrls = storage.formUrls || [];
+    
+    // Filter out the form with matching ID
+    formUrls = formUrls.filter(item => item.formId !== formId);
+    
+    // Save back to local storage
+    await chrome.storage.local.set({ 'formUrls': formUrls });
+    
+    // Update badge
+    updateBadge(formUrls.length);
+    
     return true;
   } catch (error) {
     console.error("Error deleting URL:", error);
@@ -79,67 +117,23 @@ async function deleteUrl(url) {
   }
 }
 
-// Function to send delete request to API Gateway
-async function sendDeleteRequestToApiGateway(url) {
-  try {
-    console.log('Sending delete request to API Gateway for URL:', url);
-    
-    // Create an object with the URL and user ID
-    const payload = { 
-      url: url,
-      userId: chrome.runtime.id
-    };
-    
-    // Convert to JSON string
-    const jsonPayload = JSON.stringify(payload);
-    console.log('Sending delete payload:', jsonPayload);
-    
-    const response = await fetch(API_ENDPOINT_DELETE_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: jsonPayload
-    });
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    console.log('Successfully sent delete request to API Gateway:', data);
-    return true;
-  } catch (error) {
-    console.error('Error sending delete request to API Gateway:', error);
-    return false;
-  }
-}
+// This function has been removed as we're no longer sending delete requests to API Gateway
 
-// Function to fetch URLs from API Gateway and update local storage
+// Function to update badge based on current local storage
 async function updateLocalStorage() {
   try {
-    console.log('Updating local storage with latest URLs from API Gateway');
+    console.log('Updating badge based on current local storage');
     
-    // Fetch URLs from API Gateway
-    const response = await fetch(`${API_ENDPOINT_RETRIEVE_URLS}?userId=${chrome.runtime.id}`);
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    const urls = data.urls || [];
-    
-    // Store URLs in chrome.storage.local
-    await chrome.storage.local.set({ 'formUrls': urls });
-    console.log('Successfully updated local storage with', urls.length, 'URLs');
+    // Get existing form URLs from local storage
+    const storage = await chrome.storage.local.get('formUrls');
+    const formUrls = storage.formUrls || [];
     
     // Update the badge with the number of editing forms
-    updateBadge(urls.length);
+    updateBadge(formUrls.length);
     
     return true;
   } catch (error) {
-    console.error('Error updating local storage:', error);
+    console.error('Error updating badge from local storage:', error);
     return false;
   }
 }
@@ -156,75 +150,78 @@ function updateBadge(count) {
 }
 
 // Initialize local storage when extension is loaded
-chrome.runtime.onInstalled.addListener(() => {
+chrome.runtime.onInstalled.addListener(async () => {
+  // Initialize empty arrays if they don't exist
+  const storage = await chrome.storage.local.get(['formUrls', 'formSubmissions', 'savedFormResponses']);
+  
+  if (!storage.formUrls) {
+    await chrome.storage.local.set({ 'formUrls': [] });
+  }
+  
+  if (!storage.formSubmissions) {
+    await chrome.storage.local.set({ 'formSubmissions': [] });
+  }
+  
+  if (!storage.savedFormResponses) {
+    await chrome.storage.local.set({ 'savedFormResponses': [] });
+  }
+  
+  // Update badge
   updateLocalStorage();
-  updateSubmissionsInLocalStorage();
 });
 
-// Function to send submission URL to API Gateway
-async function sendSubmissionToApiGateway(editUrl, formId, formTitle) {
+// Function to add submission to local storage
+async function addSubmission(editUrl, formId, formTitle) {
   try {
-    console.log('Sending submission URL to API Gateway:', editUrl);
+    console.log('Adding submission to local storage:', editUrl);
     
-    // Create an object with the edit URL, form ID, form title, and user ID
-    const payload = { 
+    // Get existing form submissions from local storage
+    const storage = await chrome.storage.local.get('formSubmissions');
+    const formSubmissions = storage.formSubmissions || [];
+    
+    // Check if submission already exists
+    const existingIndex = formSubmissions.findIndex(item => item.editUrl === editUrl);
+    
+    const submission = {
       editUrl: editUrl,
       formId: formId,
       formTitle: formTitle || 'Unknown Form',
-      userId: chrome.runtime.id
+      dateSubmitted: new Date().toISOString()
     };
     
-    // Convert to JSON string
-    const jsonPayload = JSON.stringify(payload);
-    console.log('Sending submission payload:', jsonPayload);
-    
-    const response = await fetch(API_ENDPOINT_UPLOAD_SUBMISSION, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: jsonPayload
-    });
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
+    if (existingIndex >= 0) {
+      // Update existing entry
+      formSubmissions[existingIndex] = {
+        ...formSubmissions[existingIndex],
+        ...submission
+      };
+    } else {
+      // Add new entry
+      formSubmissions.push(submission);
     }
     
-    const data = await response.json();
-    console.log('Successfully sent submission URL to API Gateway:', data);
-    
-    // After successful submission, update submissions in local storage
-    await updateSubmissionsInLocalStorage();
+    // Save back to local storage
+    await chrome.storage.local.set({ 'formSubmissions': formSubmissions });
+    console.log('Successfully added submission to local storage. Total:', formSubmissions.length);
     
     return true;
   } catch (error) {
-    console.error('Error sending submission URL to API Gateway:', error);
+    console.error('Error adding submission to local storage:', error);
     return false;
   }
 }
 
-// Function to fetch submissions from API Gateway and update local storage
+// Function to get submissions from local storage
 async function updateSubmissionsInLocalStorage() {
   try {
-    console.log('Updating local storage with latest submissions from API Gateway');
+    console.log('Getting submissions from local storage');
     
-    // Fetch submissions from API Gateway
-    const response = await fetch(`${API_ENDPOINT_RETRIEVE_SUBMISSIONS}?userId=${chrome.runtime.id}`);
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    const submissions = data.submissions || [];
-    
-    // Store submissions in chrome.storage.local
-    await chrome.storage.local.set({ 'formSubmissions': submissions });
-    console.log('Successfully updated local storage with', submissions.length, 'submissions');
+    // This function is now just a placeholder for compatibility
+    // All submission operations are handled directly in addSubmission
     
     return true;
   } catch (error) {
-    console.error('Error updating submissions in local storage:', error);
+    console.error('Error in updateSubmissionsInLocalStorage:', error);
     return false;
   }
 }
@@ -269,7 +266,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
   if (message.action === 'uploadSubmission') {
     console.log('Received uploadSubmission request:', message);
-    sendSubmissionToApiGateway(message.editUrl, message.formId, message.formTitle)
+    addSubmission(message.editUrl, message.formId, message.formTitle)
       .then(result => sendResponse({ success: result }))
       .catch(error => sendResponse({ success: false, error: error.message }));
     return true; // Indicates we will send a response asynchronously
