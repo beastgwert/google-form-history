@@ -80,8 +80,38 @@ export class SubmittedComponent implements OnInit, OnDestroy {
     return this.formService.formatDate(timestamp);
   }
 
-  openForm(url: string) {
-    chrome.tabs.create({ url });
+  openForm(submission: SubmissionData) {
+    // If we have an editUrl, use it to open the form
+    if (submission.editUrl) {
+      chrome.tabs.create({ url: submission.editUrl });
+    } else {
+      // If we don't have an editUrl but have questions data, show it in a modal or alert
+      if (submission.questions && submission.questions.length > 0) {
+        this.showSubmissionDetails(submission);
+      } else {
+        // If we have neither, just show a message
+        alert('No edit link available for this submission.');
+      }
+    }
+  }
+  
+  // Method to display submission details when no edit link is available
+  showSubmissionDetails(submission: SubmissionData) {
+    // For now, we'll just use an alert to show the questions and answers
+    // This could be enhanced to use a modal dialog in the future
+    let message = `Form: ${submission.formTitle}\n`;
+    message += `Submitted: ${this.getFormattedDate(submission.timestamp)}\n\n`;
+    
+    if (submission.questions && submission.questions.length > 0) {
+      message += 'Your Responses:\n';
+      submission.questions.forEach((q, index) => {
+        message += `\n${index + 1}. ${q.text}\nAnswer: ${q.answer}\n`;
+      });
+    } else {
+      message += 'No response details available.';
+    }
+    
+    alert(message);
   }
   
   ngOnDestroy() {

@@ -170,7 +170,7 @@ chrome.runtime.onInstalled.addListener(async () => {
 });
 
 // Function to add submission to local storage
-async function addSubmission(editUrl, formId, formTitle) {
+async function addSubmission(editUrl, formId, formTitle, questions = null) {
   try {
     console.log('Adding submission to local storage:', formId);
     
@@ -182,11 +182,16 @@ async function addSubmission(editUrl, formId, formTitle) {
     const existingIndex = formSubmissions.findIndex(item => item.formId === formId);
     
     const submission = {
-      editUrl: editUrl,
+      editUrl: editUrl || '', // Support blank editUrl for submissions without edit links
       formId: formId,
       formTitle: formTitle || 'Unknown Form',
       timestamp: new Date().toISOString()
     };
+    
+    // Add questions data if provided
+    if (questions) {
+      submission.questions = questions;
+    }
     
     if (existingIndex >= 0) {
       // Update existing entry
@@ -265,7 +270,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
   if (message.action === 'uploadSubmission') {
     console.log('Received uploadSubmission request:', message);
-    addSubmission(message.editUrl, message.formId, message.formTitle)
+    addSubmission(message.editUrl, message.formId, message.formTitle, message.questions)
       .then(result => sendResponse({ success: result }))
       .catch(error => sendResponse({ success: false, error: error.message }));
     return true; // Indicates we will send a response asynchronously

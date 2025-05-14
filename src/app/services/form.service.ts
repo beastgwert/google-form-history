@@ -50,6 +50,11 @@ export interface SubmissionData {
   formTitle: string;
   editUrl: string;
   timestamp: string;
+  questions?: {
+    text: string;
+    answer: string;
+    type: string;
+  }[];
 }
 
 export interface SavedFormResponse {

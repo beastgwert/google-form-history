@@ -39,6 +39,9 @@ function detectEditResponseLink() {
   }
   
   console.log('Could not find "Edit your response" link using any method');
+  
+  // If no edit link is found, check if we have a saved form response for this form
+  checkSavedFormResponses();
 }
 
 // Process the edit link once found
@@ -73,6 +76,66 @@ function processEditLink(href) {
     console.error('Could not extract form ID from edit URL:', editUrl);
   }
 }
+
+// Function to check for saved form responses and migrate them to submissions
+async function checkSavedFormResponses() {
+  console.log('Checking for saved form responses...');
+  
+  // Extract form ID from current URL
+  const currentUrl = window.location.href;
+  const formId = extractFormId(currentUrl);
+  
+  if (!formId) {
+    console.error('Could not extract form ID from current URL:', currentUrl);
+    return;
+  }
+  
+  console.log('Extracted form ID:', formId);
+  
+  // Get form title from the document title
+  let formTitle = document.title;
+  formTitle = formTitle.replace(/ - Google Forms$/, '');
+  formTitle = formTitle.replace(/Form submitted$/, '').trim();
+  
+  // Get saved form responses from local storage
+  chrome.storage.local.get('savedFormResponses', result => {
+    const savedResponses = result.savedFormResponses || [];
+    console.log('Found saved responses:', savedResponses.length);
+    
+    // Find matching form response by formId
+    const matchingResponse = savedResponses.find(response => response.formId === formId);
+    
+    if (matchingResponse) {
+      console.log('Found matching saved response:', matchingResponse);
+      
+      // Use the questions directly from the saved response
+      const questions = matchingResponse.questions || [];
+      
+      // Upload as a submission with blank editUrl and include questions
+      chrome.runtime.sendMessage({
+        action: 'uploadSubmission',
+        editUrl: '', // Blank edit URL since we don't have one
+        formId: formId,
+        formTitle: formTitle || matchingResponse.title,
+        questions: questions
+      }, response => {
+        console.log('Response from background script for submission:', response);
+        
+        if (response && response.success) {
+          // Delete the entry from savedFormResponses
+          const updatedResponses = savedResponses.filter(resp => resp.formId !== formId);
+          chrome.storage.local.set({ 'savedFormResponses': updatedResponses }, () => {
+            console.log('Successfully removed saved form response after migration');
+          });
+        }
+      });
+    } else {
+      console.log('No matching saved form response found for formId:', formId);
+    }
+  });
+}
+
+
 
 // Execute immediately when script is injected
 console.log('Content script loaded and executing immediately');
