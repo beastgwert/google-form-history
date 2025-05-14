@@ -55,15 +55,14 @@ async function addUrl(url, title) {
       // Update existing entry
       formUrls[existingIndex].url = url; // Update URL in case it changed
       formUrls[existingIndex].title = title || 'Unknown Form';
-      formUrls[existingIndex].lastUpdated = new Date().toISOString();
+      formUrls[existingIndex].timestamp = new Date().toISOString(); // Update timestamp on changes
     } else {
       // Add new entry
       formUrls.push({
         formId: formId,
         url: url,
         title: title || 'Unknown Form',
-        dateAdded: new Date().toISOString(),
-        lastUpdated: new Date().toISOString()
+        timestamp: new Date().toISOString()
       });
     }
     
@@ -173,20 +172,20 @@ chrome.runtime.onInstalled.addListener(async () => {
 // Function to add submission to local storage
 async function addSubmission(editUrl, formId, formTitle) {
   try {
-    console.log('Adding submission to local storage:', editUrl);
+    console.log('Adding submission to local storage:', formId);
     
     // Get existing form submissions from local storage
     const storage = await chrome.storage.local.get('formSubmissions');
     const formSubmissions = storage.formSubmissions || [];
     
     // Check if submission already exists
-    const existingIndex = formSubmissions.findIndex(item => item.editUrl === editUrl);
+    const existingIndex = formSubmissions.findIndex(item => item.formId === formId);
     
     const submission = {
       editUrl: editUrl,
       formId: formId,
       formTitle: formTitle || 'Unknown Form',
-      dateSubmitted: new Date().toISOString()
+      timestamp: new Date().toISOString()
     };
     
     if (existingIndex >= 0) {

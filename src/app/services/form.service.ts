@@ -84,6 +84,7 @@ export class FormService {
 
   /**
    * Gets all stored URLs with titles from chrome.storage.local
+   * Data is sorted by date (newest first) by default
    */
   async getUrls(): Promise<FormData[]> {
     try {
@@ -99,10 +100,15 @@ export class FormService {
         timestamp: item.timestamp || Date.now()
       }));
 
+      // Sort by timestamp (newest first)
+      const sortedFormData = formData.sort((a, b) => {
+        return new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime();
+      });
+
       // Update the BehaviorSubject
-      this.editingFormsSubject.next(formData);
+      this.editingFormsSubject.next(sortedFormData);
       
-      return formData;
+      return sortedFormData;
     } catch (error) {
       console.error('Error getting URLs from local storage:', error);
       return [];
@@ -221,13 +227,23 @@ export class FormService {
 
   sortEditingFormsByDate() {
     const forms = [...this.editingFormsSubject.value];
-    forms.sort((a, b) => b.timestamp - a.timestamp); // Newest first
+    forms.sort((a, b) => {
+      // Handle both number timestamps and ISO string timestamps
+      const timestampA = typeof a.timestamp === 'string' ? new Date(a.timestamp).getTime() : a.timestamp;
+      const timestampB = typeof b.timestamp === 'string' ? new Date(b.timestamp).getTime() : b.timestamp;
+      return timestampB - timestampA; // Newest first
+    });
     this.editingFormsSubject.next(forms);
   }
 
   sortSubmittedFormsByDate() {
     const forms = [...this.submittedFormsSubject.value];
-    forms.sort((a, b) => b.timestamp - a.timestamp); // Newest first
+    forms.sort((a, b) => {
+      // Handle both number timestamps and ISO string timestamps
+      const timestampA = typeof a.timestamp === 'string' ? new Date(a.timestamp).getTime() : a.timestamp;
+      const timestampB = typeof b.timestamp === 'string' ? new Date(b.timestamp).getTime() : b.timestamp;
+      return timestampB - timestampA; // Newest first
+    });
     this.submittedFormsSubject.next(forms);
   }
 
