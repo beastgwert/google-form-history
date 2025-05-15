@@ -243,7 +243,7 @@ function addSaveButton() {
         }, response => {
           console.log('Response from background script:', response);
           // Show confirmation to user
-          alert('Your responses have been saved!');
+          alert('Your responses have been saved! You can now safely submit.' );
         });
       });
       

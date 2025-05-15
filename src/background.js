@@ -246,8 +246,18 @@ async function saveFormResponses(formData) {
       status: 'saved' // to distinguish from submitted forms
     };
     
-    // Add to the array of saved responses
-    savedResponses.push(responseWithTimestamp);
+    // Check if an entry with the same formId already exists
+    const existingIndex = savedResponses.findIndex(response => response.formId === formData.formId);
+    
+    if (existingIndex !== -1) {
+      // Replace the existing entry
+      savedResponses[existingIndex] = responseWithTimestamp;
+      console.log('Replaced existing form response with updated data');
+    } else {
+      // Add to the array of saved responses
+      savedResponses.push(responseWithTimestamp);
+      console.log('Added new form response');
+    }
     
     // Save back to storage
     await chrome.storage.local.set({ 'savedFormResponses': savedResponses });
