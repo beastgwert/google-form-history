@@ -24,6 +24,7 @@ declare const chrome: any;
 export class EditingComponent implements OnInit, OnDestroy {
   formUrls: FormItem[] = [];
   private subscription: Subscription | undefined;
+  isLoading: boolean = true;
 
   constructor(private formService: FormService, private cdr: ChangeDetectorRef) {}
 
@@ -33,7 +34,8 @@ export class EditingComponent implements OnInit, OnDestroy {
 
   async loadUrls() {
     console.log("Loading URLs...");
-    const forms = await this.formService.getUrls();
+    this.isLoading = true;
+    await this.formService.getUrls();
     
     // Subscribe to the editingForms$ observable to get updates when sorting changes
     this.subscription = this.formService.editingForms$.subscribe(updatedForms => {
@@ -43,6 +45,7 @@ export class EditingComponent implements OnInit, OnDestroy {
         title: item.title,
         timestamp: new Date(item.timestamp).toISOString()
       }));
+      this.isLoading = false;
       this.cdr.detectChanges();
     });
   }

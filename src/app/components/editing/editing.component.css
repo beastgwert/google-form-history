@@ -14,10 +14,14 @@
   flex-direction: column;
 }
 
-.loading {
+.loading, .loading-state {
   text-align: center;
   font-style: italic;
   color: #666;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .no-forms {

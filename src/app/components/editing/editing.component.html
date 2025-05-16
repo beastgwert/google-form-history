@@ -1,19 +1,23 @@
 <div class="editing-section">
 <div class="content">
-<div class="form-urls">
-  <div *ngIf="formUrls.length === 0" class="no-forms">
-    <p>All caught up!</p>
-    <p class="hint">Forms you're editing will appear here</p>
+  <!-- Loading state -->
+  <div *ngIf="isLoading" class="loading-state">
   </div>
-  <div class="url-list" *ngIf="formUrls.length > 0">
-    <div *ngFor="let formData of formUrls" class="url-item">
-      <div class="url-info" (click)="openForm(formData.url)">
-        <div #titleElement class="form-name" [title]="isTitleTruncated(formData, titleElement) ? getOriginalFormName(formData) : ''">{{ getFormName(formData) }}</div>
-        <div class="form-date">{{ getFormattedDate(formData.timestamp) }}</div>
+
+  <div *ngIf="!isLoading" class="form-urls">
+    <div *ngIf="formUrls.length === 0" class="no-forms">
+      <p>All caught up!</p>
+      <p class="hint">Forms you're editing will appear here</p>
+    </div>
+    <div class="url-list" *ngIf="formUrls.length > 0">
+      <div *ngFor="let formData of formUrls" class="url-item">
+        <div class="url-info" (click)="openForm(formData.url)">
+          <div #titleElement class="form-name" [title]="isTitleTruncated(formData, titleElement) ? getOriginalFormName(formData) : ''">{{ getFormName(formData) }}</div>
+          <div class="form-date">{{ getFormattedDate(formData.timestamp) }}</div>
+        </div>
+        <img src="assets/trash.svg" class="trash-icon" (click)="removeUrl(formData.formId)">
       </div>
-      <img src="assets/trash.svg" class="trash-icon" (click)="removeUrl(formData.formId)">
     </div>
   </div>
-</div>
 </div>
 </div>
