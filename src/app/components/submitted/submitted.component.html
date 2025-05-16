@@ -1,17 +1,25 @@
 <div class="submitted-section">
 <div class="content">
-<div class="submissions-list">
-  <div *ngFor="let submission of submissions" class="submission-item">
-    <div class="submission-info">
-      <div #titleElement class="submission-title" [title]="isTitleTruncated(submission, titleElement) ? getOriginalFormName(submission) : ''">{{ getFormName(submission) }}</div>
-      <div class="submission-date">{{ getFormattedDate(submission.timestamp) }}</div>
-    </div>
-    <div class="action-icons">
-      <img *ngIf="submission.questions && submission.questions.length > 0" src="assets/view-submission.svg" class="action-icon" (click)="viewSubmission(submission, $event)" title="View submission">
-      <img *ngIf="submission.editUrl" src="assets/edit-submission.svg" class="action-icon" (click)="editSubmission(submission, $event)" title="Edit submission">
-      <img src="assets/trash.svg" class="trash-icon" (click)="removeSubmission(submission.formId, $event)" title="Delete">
+  <!-- Show submissions list when there are items -->
+  <div *ngIf="submissions.length > 0" class="submissions-list">
+    <div *ngFor="let submission of submissions" class="submission-item">
+      <div class="submission-info">
+        <div #titleElement class="submission-title" [title]="isTitleTruncated(submission, titleElement) ? getOriginalFormName(submission) : ''">{{ getFormName(submission) }}</div>
+        <div class="submission-date">{{ getFormattedDate(submission.timestamp) }}</div>
+      </div>
+      <div class="action-icons">
+        <img *ngIf="submission.questions && submission.questions.length > 0" src="assets/view-submission.svg" class="action-icon" (click)="viewSubmission(submission, $event)" title="View submission">
+        <img *ngIf="submission.editUrl" src="assets/edit-submission.svg" class="action-icon" (click)="editSubmission(submission, $event)" title="Edit submission">
+        <img src="assets/trash.svg" class="trash-icon" (click)="removeSubmission(submission.formId, $event)" title="Delete">
+      </div>
     </div>
   </div>
-</div>
+  
+  <!-- Show empty state background when no submissions -->
+  <div *ngIf="submissions.length === 0" class="empty-state-container">
+    <div class="empty-state-wrapper">
+      <img src="assets/submitted-background.webp" class="empty-state-background" alt="No submissions">
+    </div>
+  </div>
 </div>
 </div>
