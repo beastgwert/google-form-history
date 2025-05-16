@@ -31,7 +31,7 @@
     "content_scripts": [
         {
             "matches": ["https://docs.google.com/forms/*"],
-            "js": ["form-capture-script.js"],
+            "js": ["form-capture.js"],
             "run_at": "document_idle"
         }
     ],

@@ -27,8 +27,8 @@
               },
               "src/manifest.json",
               "src/background.js",
-              "src/content-script.js",
-              "src/form-capture-script.js",
+              "src/submission-capture.js",
+              "src/form-capture.js",
               "src/templates",
               "src/assets"
             ],
@@ -91,8 +91,8 @@
               },
               "src/manifest.json",
               "src/background.js",
-              "src/content-script.js",
-              "src/form-capture-script.js",
+              "src/submission-capture.js",
+              "src/form-capture.js",
               "src/templates",
               "src/assets"
             ],

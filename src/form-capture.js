@@ -1,8 +1,7 @@
 // Content script to add a "Save Responses" button to Google Forms
 
-// Function to extract form data (questions and responses)
+// Extract form data (questions and responses)
 function extractFormData() {
-  console.log('Extracting form data...');
   const formData = {
     questions: [],
     formId: extractFormId(window.location.href),
@@ -14,11 +13,9 @@ function extractFormData() {
   // Try to get data from FB_PUBLIC_LOAD_DATA_ by parsing script tags
   let fbData = null;
   try {
-    // Find script tags that might contain the FB_PUBLIC_LOAD_DATA_ variable
     const scripts = document.querySelectorAll('script');
     let fbDataScript = null;
     
-    // Look for the script containing FB_PUBLIC_LOAD_DATA_
     for (const script of scripts) {
       if (script.textContent.includes('var FB_PUBLIC_LOAD_DATA_')) {
         fbDataScript = script.textContent;
@@ -27,19 +24,15 @@ function extractFormData() {
     }
     
     if (fbDataScript) {
-      // Extract the data by evaluating the script in a safe way
-      // First, extract just the assignment part
       const dataMatch = fbDataScript.match(/var\s+FB_PUBLIC_LOAD_DATA_\s*=\s*(\[.*?\]);/);
       if (dataMatch && dataMatch[1]) {
-        // Parse the JSON data
         fbData = JSON.parse(dataMatch[1]);
-        console.log('Found FB_PUBLIC_LOAD_DATA_ in script tag:', fbData);
+        // console.log('Found FB_PUBLIC_LOAD_DATA_ in script tag:', fbData);
         
         // Extract form description if available
-        // The description is typically in fbData[1][0] as seen in responses.txt
         if (Array.isArray(fbData) && fbData.length > 1 && Array.isArray(fbData[1]) && fbData[1].length > 0) {
           formData.description = fbData[1][0] || '';
-          console.log('Extracted form description:', formData.description);
+          // console.log('Extracted form description:', formData.description);
         }
       }
     }
@@ -57,14 +50,11 @@ function extractFormData() {
     if (Array.isArray(questions)) {
       questions.forEach(q => {
         if (Array.isArray(q) && q.length >= 5 && Array.isArray(q[4]) && q[4].length > 0) {
-          // The actual question ID used in responses is in q[4][0][0]
-          // q[1] is the question text
           const questionText = q[1]; // Question text
           
-          // Extract the entry ID which is used in the partialResponse
           if (Array.isArray(q[4][0]) && q[4][0].length > 0) {
-            const entryId = q[4][0][0]; // This is the ID used in partialResponse
-            console.log(`Found question: "${questionText}" with ID: ${entryId}`);
+            const entryId = q[4][0][0]; 
+            // console.log(`Found question: "${questionText}" with ID: ${entryId}`);
             questionMap.set(entryId.toString(), {
               text: questionText,
               answer: ''
@@ -78,7 +68,7 @@ function extractFormData() {
   // Get all hidden input fields for responses
   const hiddenInputs = document.querySelectorAll('input[type="hidden"]');
   
-  // Process individual entry inputs (entry.{id})
+  // Process individual entry inputs (entry.{id}) - these only exist on the current page
   hiddenInputs.forEach(input => {
     const name = input.getAttribute('name');
     const value = input.getAttribute('value');
@@ -86,22 +76,15 @@ function extractFormData() {
     if (name && name.startsWith('entry.')) {
       const entryId = name.replace('entry.', '');
       
-      // Check if this entry ID exists in our question map
       if (questionMap.has(entryId)) {
-        console.log(`Found hidden input for question ID ${entryId} with value: ${value}`);
+        // console.log(`Found hidden input for question ID ${entryId} with value: ${value}`);
         const question = questionMap.get(entryId);
         question.answer = value;
       }
     }
   });
   
-  // Log the questionMap for debugging
-  console.log('Question Map before processing partialResponse:');
-  questionMap.forEach((question, id) => {
-    console.log(`ID: ${id}, Text: ${question.text}, Answer: ${question.answer}`);
-  });
-  
-  // Check for partialResponse which may contain all responses in one JSON string
+  // Check for partialResponse - contains responses from previous pages
   const partialResponseInput = Array.from(hiddenInputs).find(input => 
     input.getAttribute('name') === 'partialResponse'
   );
@@ -109,21 +92,17 @@ function extractFormData() {
   if (partialResponseInput) {
     try {
       const partialResponseValue = partialResponseInput.getAttribute('value');
-      console.log('Raw partialResponse value:', partialResponseValue);
       
-      // The value is a JSON string that needs to be parsed
-      // It's often in the format: [[[null,id,["response"],0],...],null,"formId"]
+      // Format: [[[null,id,["response"],0],...],null,"formId"]
       const partialResponse = JSON.parse(partialResponseValue);
       
-      console.log('Parsed partialResponse:', partialResponse);
+      // console.log('Parsed partialResponse:', partialResponse);
       
       if (Array.isArray(partialResponse) && Array.isArray(partialResponse[0])) {
         partialResponse[0].forEach(responseItem => {
           if (Array.isArray(responseItem) && responseItem.length >= 3) {
             const questionId = responseItem[1];
             const responseValues = responseItem[2];
-            
-            console.log(`Found response for question ID ${questionId}:`, responseValues);
             
             if (questionMap.has(questionId.toString())) {
               const question = questionMap.get(questionId.toString());
@@ -132,7 +111,6 @@ function extractFormData() {
               } else {
                 question.answer = responseValues;
               }
-              console.log(`Updated question '${question.text}' with answer: ${question.answer}`);
             } else {
               console.log(`No matching question found for ID ${questionId}`);
             }
@@ -147,42 +125,33 @@ function extractFormData() {
   
   // Convert the question map to an array for our formData
   formData.questions = Array.from(questionMap.values());
-  
-  console.log('Extracted form data:', formData);
   return formData;
 }
 
 
 
-// Function to extract form ID from URL (reusing from content-script.js)
+// Extract form ID from URL 
 function extractFormId(url) {
-  // Try to match the edit response URL format for URLs like:
   // https://docs.google.com/forms/d/e/FORM_ID/viewform
   let match = url.match(/forms\/d\/e\/([\w-]+)\//);
-  
-  // If that doesn't match, try the format for URLs with u/0 pattern:
+
   // https://docs.google.com/forms/u/0/d/e/FORM_ID/viewform
   if (!match || !match[1]) {
     match = url.match(/forms\/u\/\d+\/d\/e\/([\w-]+)\//);
   }
-  
-  // If that doesn't match, try the standard format:
+
   // https://docs.google.com/forms/d/FORM_ID/edit
   if (!match || !match[1]) {
     match = url.match(/forms\/d\/([\w-]+)/);
   }
-  
+
   if (match && match[1]) {
     return match[1];
   }
-  
   return null;
 }
 
-// Function to add the save button
 function addSaveButton() {
-  console.log('Looking for "Clear form" span to add save button before it...');
-  
   // Find the span with "Clear form" text
   const allSpans = document.querySelectorAll('span');
   let clearFormSpan = null;
@@ -190,20 +159,16 @@ function addSaveButton() {
   for (const span of allSpans) {
     if (span.textContent === 'Clear form') {
       clearFormSpan = span;
-      console.log('Found "Clear form" span:', span);
       break;
     }
   }
   
   // If we found the "Clear form" span
   if (clearFormSpan) {
-    console.log('Found "Clear form" span, looking for nearest button element...');
-    
-    // Find the closest button element
     let currentElement = clearFormSpan;
     let buttonElement = null;
     
-    // Look for an element with role="button" by traversing up the DOM, identifies the "Clear form" button
+    // Look for corresponding div with button role
     while (currentElement && !buttonElement) {
       if (currentElement.getAttribute('role') === 'button') {
         buttonElement = currentElement;
@@ -219,9 +184,6 @@ function addSaveButton() {
     const parentContainer = buttonElement.parentNode;
     
     if (parentContainer) {
-      console.log('Found parent container for save button');
-      
-      // Create our save button
       const saveButton = document.createElement('div');
       saveButton.setAttribute('role', 'button');
       saveButton.textContent = 'Save';
@@ -232,30 +194,21 @@ function addSaveButton() {
           saveButton.classList.add(className);
         });
       }
-      
-      // Insert our save button before the clear form button
+
       parentContainer.insertBefore(saveButton, buttonElement);
-      
-      // Add click event
       saveButton.addEventListener('click', function(event) {
         event.preventDefault();
         event.stopPropagation();
         
-        // Extract form data
         const formData = extractFormData();
-        
-        // Send to background script
         chrome.runtime.sendMessage({
           action: 'saveFormResponses',
           formData: formData
         }, response => {
-          console.log('Response from background script:', response);
-          // Show confirmation to user
+          // console.log('Response from background script:', response);
           alert('Your responses have been saved! You can now safely submit.' );
         });
       });
-      
-      console.log('Save button added successfully');
     } else {
       console.error('Could not find parent container for the "Clear form" span');
     }
@@ -264,39 +217,20 @@ function addSaveButton() {
   }
 }
 
-// Function to check if the submit button exists on the page
 function checkForSubmitButton() {
-  console.log('Checking for submit button...');
-  
-  // Look for any span with 'Submit' text
   const allSpans = document.querySelectorAll('span');
-  console.log('Total spans found:', allSpans.length);
-  
   for (const span of allSpans) {
     if (span.textContent === 'Submit') {
-      console.log('Submit button found! Classes:', span.className);
       return true;
     }
   }
-  
-  console.log('Submit button not found');
   return false;
 }
 
-// Main initialization function - check for submit button and add save button if found
 function initialize() {
-  console.log('Form capture script loaded');
-  
-  // First check if this is a form with a submit button
   if (checkForSubmitButton()) {
-    console.log('Adding save button to Google Form');
-    
-    // Add the save button
     addSaveButton();
-  } else {
-    console.log('No submit button found, not adding save button');
   }
 }
 
-// Run when the content script is loaded
 initialize();
