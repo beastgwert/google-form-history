@@ -38,20 +38,7 @@ export class SubmittedComponent implements OnInit, OnDestroy {
 
   async loadSubmissions() {
     console.log("Loading submissions...");
-    const submissionData = await this.formService.getSubmissions();
-    
-    // Convert to the format expected by the component
-    this.submissions = submissionData.map(sub => ({
-      formId: sub.formId || '',
-      formTitle: sub.formTitle,
-      editUrl: sub.editUrl,
-      timestamp: sub.timestamp,
-      questions: sub.questions
-    }));
-    
-    console.log("Loaded submissions: ", this.submissions);
-    // Manually trigger change detection
-    this.cdr.detectChanges();
+    await this.formService.getSubmissions();
     
     // Subscribe to the submittedForms$ observable to get updates when sorting changes
     this.subscription = this.formService.submittedForms$.subscribe(updatedForms => {
@@ -60,7 +47,7 @@ export class SubmittedComponent implements OnInit, OnDestroy {
         formTitle: form.title,
         editUrl: form.url,
         timestamp: new Date(form.timestamp).toISOString(),
-        questions: undefined
+        questions: form.questions || []
       }));
       this.cdr.detectChanges();
     });

@@ -35,18 +35,6 @@ export class EditingComponent implements OnInit, OnDestroy {
     console.log("Loading URLs...");
     const forms = await this.formService.getUrls();
     
-    // Convert to the format expected by the component
-    this.formUrls = forms.map(item => ({
-      formId: item.formId || '',
-      url: item.url,
-      title: item.title,
-      timestamp: new Date(item.timestamp).toISOString()
-    }));
-    
-    console.log("Loaded URLs: ", this.formUrls);
-    // Manually trigger change detection
-    this.cdr.detectChanges();
-    
     // Subscribe to the editingForms$ observable to get updates when sorting changes
     this.subscription = this.formService.editingForms$.subscribe(updatedForms => {
       this.formUrls = updatedForms.map(item => ({

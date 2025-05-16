@@ -119,6 +119,11 @@ function sendFormData(data, allSavedResponses) {
     }
   }
   
+  if (!editUrl && !savedResponse) {
+    console.log('No edit URL or saved response found for formId:', formId);
+    return;
+  }
+  
   console.log('Sending combined form data to background script:', messagePayload);
   
   // Send message to background script

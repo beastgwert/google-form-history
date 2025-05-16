@@ -189,9 +189,7 @@ async function addSubmission(editUrl, formId, formTitle, questions = null) {
     };
     
     // Add questions data if provided
-    if (questions) {
-      submission.questions = questions;
-    }
+    submission.questions = questions;
     
     if (existingIndex >= 0) {
       // Update existing entry

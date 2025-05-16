@@ -8,6 +8,11 @@ export interface FormData {
   url: string;
   title: string;
   timestamp: number;
+  questions?: {
+    text: string;
+    answer: string;
+    type: string;
+  }[];
 }
 export interface SubmissionData {
   formId?: string;
@@ -102,7 +107,8 @@ export class FormService {
         formId: sub.formId,
         url: sub.editUrl,
         title: sub.formTitle || 'Unknown Form',
-        timestamp: new Date(sub.timestamp).getTime()
+        timestamp: new Date(sub.timestamp).getTime(),
+        questions: sub.questions
       })));
       
       return sortedSubmissions;
