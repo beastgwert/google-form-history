@@ -2,8 +2,6 @@ import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormService } from '../../services/form.service';
 import { Subscription } from 'rxjs';
-
-// Local interface for component use - different from FormService's FormData
 interface FormItem {
   formId: string;
   url: string;
@@ -11,7 +9,6 @@ interface FormItem {
   timestamp: string;
 }
 
-// Chrome extension API types
 declare const chrome: any;
 
 @Component({
@@ -53,40 +50,19 @@ export class EditingComponent implements OnInit, OnDestroy {
   async removeUrl(formId: string) {
     this.formService.removeUrl(formId).catch(error => {
       console.error('Error removing form:', error);
-      // If there's an error, reload the URLs to ensure UI is in sync
       this.loadUrls();
     });
   }
 
-  getOriginalFormName(formData: FormItem): string {
-    // Use the title if available, otherwise extract from URL
-    if (formData.title && formData.title !== 'Unknown Form') {
-      return formData.title;
-    }
-    
-    try {
-      // Fallback to extracting form name from URL
-      const urlObj = new URL(formData.url);
-      const pathParts = urlObj.pathname.split('/');
-      return pathParts[pathParts.length - 2] || 'Unknown Form';
-    } catch {
-      return 'Unknown Form';
-    }
-  }
-
   getFormName(formData: FormItem): string {
-    // Just return the original name - truncation will be handled by CSS
-    return this.getOriginalFormName(formData);
+    return formData.title;
   }
   
-  // This will be called from the template to check if title should show tooltip
-  isTitleTruncated(formData: FormItem, element?: HTMLElement): boolean {
+  // Check if title should show tooltip
+  isTitleTruncated(element?: HTMLElement): boolean {
     if (element) {
-      // DOM-based overflow detection
       return element.offsetWidth < element.scrollWidth;
     }
-    
-    // Fallback to the original name for tooltip content
     return true;
   }
 

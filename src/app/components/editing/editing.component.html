@@ -12,7 +12,7 @@
     <div class="url-list" *ngIf="formUrls.length > 0">
       <div *ngFor="let formData of formUrls" class="url-item">
         <div class="url-info" (click)="openForm(formData.url)">
-          <div #titleElement class="form-name" [title]="isTitleTruncated(formData, titleElement) ? getOriginalFormName(formData) : ''">{{ getFormName(formData) }}</div>
+          <div #titleElement class="form-name" [title]="isTitleTruncated(titleElement) ? getFormName(formData) : ''">{{ getFormName(formData) }}</div>
           <div class="form-date">{{ getFormattedDate(formData.timestamp) }}</div>
         </div>
         <img src="assets/trash.svg" class="trash-icon" (click)="removeUrl(formData.formId)">

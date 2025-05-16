@@ -8,7 +8,7 @@
   <div *ngIf="!isLoading && submissions.length > 0" class="submissions-list">
     <div *ngFor="let submission of submissions" class="submission-item">
       <div class="submission-info">
-        <div #titleElement class="submission-title" [title]="isTitleTruncated(submission, titleElement) ? getOriginalFormName(submission) : ''">{{ getFormName(submission) }}</div>
+        <div #titleElement class="submission-title" [title]="isTitleTruncated(titleElement) ? getFormName(submission) : ''">{{ getFormName(submission) }}</div>
         <div class="submission-date">{{ getFormattedDate(submission.timestamp) }}</div>
       </div>
       <div class="action-icons">
