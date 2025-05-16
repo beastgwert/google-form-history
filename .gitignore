@@ -46,7 +46,7 @@ instructions.txt
 
 # AWS
 /aws-sdk-layer
-/lambda/README.md
+/lambda
 
 # Misc
 /src/responses.txt
