@@ -37,5 +37,11 @@
         "scripting",
         "activeTab",
         "storage"
+    ],
+    "web_accessible_resources": [
+        {
+            "resources": ["templates/*"],
+            "matches": ["<all_urls>"]
+        }
     ]
 }

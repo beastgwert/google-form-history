@@ -1,7 +1,11 @@
 <div class="submitted-section">
 <div class="content">
-  <!-- Show submissions list when there are items -->
-  <div *ngIf="submissions.length > 0" class="submissions-list">
+  <!-- Loading state -->
+  <div *ngIf="isLoading" class="loading-state">
+  </div>
+
+  <!-- Show submissions list when there are items and not loading -->
+  <div *ngIf="!isLoading && submissions.length > 0" class="submissions-list">
     <div *ngFor="let submission of submissions" class="submission-item">
       <div class="submission-info">
         <div #titleElement class="submission-title" [title]="isTitleTruncated(submission, titleElement) ? getOriginalFormName(submission) : ''">{{ getFormName(submission) }}</div>
@@ -15,8 +19,8 @@
     </div>
   </div>
   
-  <!-- Show empty state background when no submissions -->
-  <div *ngIf="submissions.length === 0" class="empty-state-container">
+  <!-- Show empty state background when no submissions and not loading -->
+  <div *ngIf="!isLoading && submissions.length === 0" class="empty-state-container">
     <div class="empty-state-wrapper">
       <img src="assets/submitted-background.webp" class="empty-state-background" alt="No submissions">
     </div>

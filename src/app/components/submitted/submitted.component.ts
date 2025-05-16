@@ -29,6 +29,7 @@ declare const chrome: any;
 export class SubmittedComponent implements OnInit, OnDestroy {
   submissions: SubmissionItem[] = [];
   private subscription: Subscription | undefined;
+  isLoading: boolean = true;
 
   constructor(private formService: FormService, private cdr: ChangeDetectorRef) {}
 
@@ -38,6 +39,7 @@ export class SubmittedComponent implements OnInit, OnDestroy {
 
   async loadSubmissions() {
     console.log("Loading submissions...");
+    this.isLoading = true;
     await this.formService.getSubmissions();
     
     // Subscribe to the submittedForms$ observable to get updates when sorting changes
@@ -49,6 +51,7 @@ export class SubmittedComponent implements OnInit, OnDestroy {
         timestamp: new Date(form.timestamp).toISOString(),
         questions: form.questions || []
       }));
+      this.isLoading = false;
       this.cdr.detectChanges();
     });
   }
@@ -128,21 +131,19 @@ export class SubmittedComponent implements OnInit, OnDestroy {
   
   // Method to display submission details when no edit link is available
   showSubmissionDetails(submission: SubmissionItem) {
-    // For now, we'll just use an alert to show the questions and answers
-    // This could be enhanced to use a modal dialog in the future
-    let message = `Form: ${submission.formTitle}\n`;
-    message += `Submitted: ${this.getFormattedDate(submission.timestamp)}\n\n`;
+    // Prepare the data to pass to the template
+    const submissionData = {
+      formTitle: submission.formTitle,
+      formattedDate: this.getFormattedDate(submission.timestamp),
+      questions: submission.questions || []
+    };
     
-    if (submission.questions && submission.questions.length > 0) {
-      message += 'Your Responses:\n';
-      submission.questions.forEach((q, index) => {
-        message += `\n${index + 1}. ${q.text}\nAnswer: ${q.answer}\n`;
-      });
-    } else {
-      message += 'No response details available.';
-    }
+    // Create the URL with the data as a query parameter
+    const templateUrl = chrome.runtime.getURL('templates/submission-details.html');
+    const url = `${templateUrl}?data=${encodeURIComponent(JSON.stringify(submissionData))}`;
     
-    alert(message);
+    // Open the content in a new tab
+    chrome.tabs.create({url: url});
   }
   
   ngOnDestroy() {

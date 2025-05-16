@@ -29,6 +29,7 @@
               "src/background.js",
               "src/content-script.js",
               "src/form-capture-script.js",
+              "src/templates",
               "src/assets"
             ],
             "styles": [
@@ -92,6 +93,7 @@
               "src/background.js",
               "src/content-script.js",
               "src/form-capture-script.js",
+              "src/templates",
               "src/assets"
             ],
             "styles": [
