@@ -1,7 +1,11 @@
 <div class="editing-section">
 <div class="content">
 <div class="form-urls">
-  <div class="url-list">
+  <div *ngIf="formUrls.length === 0" class="no-forms">
+    <p>All caught up!</p>
+    <p class="hint">Forms you're editing will appear here</p>
+  </div>
+  <div class="url-list" *ngIf="formUrls.length > 0">
     <div *ngFor="let formData of formUrls" class="url-item">
       <div class="url-info" (click)="openForm(formData.url)">
         <div #titleElement class="form-name" [title]="isTitleTruncated(formData, titleElement) ? getOriginalFormName(formData) : ''">{{ getFormName(formData) }}</div>
