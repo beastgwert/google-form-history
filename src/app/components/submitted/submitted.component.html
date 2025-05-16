@@ -2,12 +2,16 @@
 <div class="content">
 <div class="submissions-list">
   <div *ngFor="let submission of submissions" class="submission-item">
-    <div class="submission-info" (click)="openForm(submission)">
+    <div class="submission-info">
       <div #titleElement class="submission-title" [title]="isTitleTruncated(submission, titleElement) ? getOriginalFormName(submission) : ''">{{ getFormName(submission) }}</div>
       <div class="submission-date">{{ getFormattedDate(submission.timestamp) }}</div>
       <div *ngIf="!submission.editUrl && submission.questions" class="submission-has-details">[Saved Responses]</div>
     </div>
-    <img src="assets/trash.svg" class="trash-icon" (click)="removeSubmission(submission.formId, $event)">
+    <div class="action-icons">
+      <img src="assets/view-submission.svg" class="action-icon" (click)="viewSubmission(submission, $event)" title="View submission">
+      <img *ngIf="submission.editUrl" src="assets/edit-submission.svg" class="action-icon" (click)="editSubmission(submission, $event)" title="Edit submission">
+      <img src="assets/trash.svg" class="trash-icon" (click)="removeSubmission(submission.formId, $event)" title="Delete">
+    </div>
   </div>
 </div>
 </div>

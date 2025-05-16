@@ -105,24 +105,31 @@ export class SubmittedComponent implements OnInit, OnDestroy {
     return this.formService.formatDate(timestamp);
   }
 
-  openForm(submission: SubmissionItem) {
-    // If we have an editUrl, use it to open the form
+  // View submission - opens the form for viewing or shows saved responses
+  viewSubmission(submission: SubmissionItem, event?: MouseEvent) {
+    if (event) {
+      event.stopPropagation();
+    }
+    
+    if (submission.questions && submission.questions.length > 0) {
+      this.showSubmissionDetails(submission);
+    } else {
+      console.log(submission);
+      alert('No edit link available for this submission.');
+    }
+  }
+  
+  // Edit submission - opens the form for editing
+  editSubmission(submission: SubmissionItem, event: MouseEvent) {
+    event.stopPropagation();
+    
+    // Only proceed if we have an editUrl
     if (submission.editUrl) {
       chrome.tabs.create({ url: submission.editUrl });
-    } else {
-      // If we don't have an editUrl but have questions data, show it in a modal or alert
-      if (submission.questions && submission.questions.length > 0) {
-        this.showSubmissionDetails(submission);
-      } else {
-        // If we have neither, just show a message
-        alert('No edit link available for this submission.');
-      }
     }
   }
   
   async removeSubmission(formId: string, event: MouseEvent) {
-    // Stop the click event from propagating to the parent element
-    // This prevents the openForm method from being called
     event.stopPropagation();
     
     this.formService.removeSubmission(formId).catch(error => {
