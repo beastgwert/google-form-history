@@ -7,6 +7,7 @@ import { Subscription } from 'rxjs';
 interface SubmissionItem {
   formId: string;
   formTitle: string;
+  description?: string;
   editUrl: string;
   timestamp: string;
   questions?: {
@@ -47,6 +48,7 @@ export class SubmittedComponent implements OnInit, OnDestroy {
       this.submissions = updatedForms.map(form => ({
         formId: form.formId || '',
         formTitle: form.title,
+        description: form.description || '',
         editUrl: form.url,
         timestamp: new Date(form.timestamp).toISOString(),
         questions: form.questions || []
@@ -134,6 +136,7 @@ export class SubmittedComponent implements OnInit, OnDestroy {
     // Prepare the data to pass to the template
     const submissionData = {
       formTitle: submission.formTitle,
+      description: submission.description || '',
       formattedDate: this.getFormattedDate(submission.timestamp),
       questions: submission.questions || []
     };

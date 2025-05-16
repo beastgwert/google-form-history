@@ -170,7 +170,7 @@ chrome.runtime.onInstalled.addListener(async () => {
 });
 
 // Function to add submission to local storage
-async function addSubmission(editUrl, formId, formTitle, questions = null) {
+async function addSubmission(editUrl, formId, formTitle, questions = null, description = '') {
   try {
     console.log('Adding submission to local storage:', formId);
     
@@ -185,6 +185,7 @@ async function addSubmission(editUrl, formId, formTitle, questions = null) {
       editUrl: editUrl || '', // Support blank editUrl for submissions without edit links
       formId: formId,
       formTitle: formTitle || 'Unknown Form',
+      description: description || '',
       timestamp: new Date().toISOString()
     };
     
@@ -278,14 +279,19 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
   if (message.action === 'uploadSubmission') {
     console.log('Received uploadSubmission request:', message);
-    addSubmission(message.editUrl, message.formId, message.formTitle, message.questions)
+    addSubmission(message.editUrl, message.formId, message.formTitle, message.questions, message.description)
       .then(result => sendResponse({ success: result }))
       .catch(error => sendResponse({ success: false, error: error.message }));
     return true; // Indicates we will send a response asynchronously
   }
   if (message.action === 'saveFormResponses') {
     console.log('Received saveFormResponses request:', message);
-    saveFormResponses(message.formData)
+    // Make sure we include the description in the form data
+    const formData = {
+      ...message.formData,
+      description: message.formData.description || ''
+    };
+    saveFormResponses(formData)
       .then(result => sendResponse({ success: result }))
       .catch(error => sendResponse({ success: false, error: error.message }));
     return true; // Indicates we will send a response asynchronously

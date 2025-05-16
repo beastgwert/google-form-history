@@ -6,8 +6,22 @@ document.addEventListener('DOMContentLoaded', function() {
   const urlParams = new URLSearchParams(window.location.search);
   const submissionData = JSON.parse(decodeURIComponent(urlParams.get('data')));
   
-  // Populate the form title and submission date
-  document.getElementById('formTitle').textContent = submissionData.formTitle;
+  // Populate the form title, description, and submission date
+  const formTitle = submissionData.formTitle;
+  document.getElementById('formTitle').textContent = formTitle;
+  
+  // Set the page title to match the form title
+  document.title = formTitle;
+  
+  // Display the description if available
+  const descriptionElement = document.getElementById('formDescription');
+  if (submissionData.description && submissionData.description.trim() !== '') {
+    descriptionElement.textContent = submissionData.description;
+    descriptionElement.style.display = 'block';
+  } else {
+    descriptionElement.style.display = 'none';
+  }
+  
   document.getElementById('submissionDate').textContent = 'Submitted: ' + submissionData.formattedDate;
   
   // Populate the responses

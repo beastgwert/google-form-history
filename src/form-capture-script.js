@@ -7,7 +7,8 @@ function extractFormData() {
     questions: [],
     formId: extractFormId(window.location.href),
     url: window.location.href,
-    title: document.title.replace(' - Google Forms', '').trim()
+    title: document.title.replace(' - Google Forms', '').trim(),
+    description: ''
   };
   
   // Try to get data from FB_PUBLIC_LOAD_DATA_ by parsing script tags
@@ -33,6 +34,13 @@ function extractFormData() {
         // Parse the JSON data
         fbData = JSON.parse(dataMatch[1]);
         console.log('Found FB_PUBLIC_LOAD_DATA_ in script tag:', fbData);
+        
+        // Extract form description if available
+        // The description is typically in fbData[1][0] as seen in responses.txt
+        if (Array.isArray(fbData) && fbData.length > 1 && Array.isArray(fbData[1]) && fbData[1].length > 0) {
+          formData.description = fbData[1][0] || '';
+          console.log('Extracted form description:', formData.description);
+        }
       }
     }
   } catch (e) {

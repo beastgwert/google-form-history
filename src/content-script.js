@@ -110,9 +110,13 @@ function sendFormData(data, allSavedResponses) {
     messagePayload.editUrl = ''; // Blank edit URL if not found
   }
   
-  // Add questions from saved response if available
+  // Add questions and description from saved response if available
   if (savedResponse) {
     messagePayload.questions = savedResponse.questions || [];
+    // Include description if available
+    if (savedResponse.description) {
+      messagePayload.description = savedResponse.description;
+    }
     // Use saved title as fallback if current title is empty
     if (!formTitle && savedResponse.title) {
       messagePayload.formTitle = savedResponse.title;

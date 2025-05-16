@@ -7,6 +7,7 @@ export interface FormData {
   formId?: string;
   url: string;
   title: string;
+  description?: string;
   timestamp: number;
   questions?: {
     text: string;
@@ -17,6 +18,7 @@ export interface FormData {
 export interface SubmissionData {
   formId?: string;
   formTitle: string;
+  description?: string;
   editUrl: string;
   timestamp: string;
   questions?: {
@@ -107,6 +109,7 @@ export class FormService {
         formId: sub.formId,
         url: sub.editUrl,
         title: sub.formTitle || 'Unknown Form',
+        description: sub.description || '',
         timestamp: new Date(sub.timestamp).getTime(),
         questions: sub.questions
       })));
