@@ -1,43 +1,7 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 
-// Chrome extension API types
 declare const chrome: any;
-
-// Helper function to extract form ID from a Google Form URL
-function extractFormId(url: string): string {
-  try {
-    // Extract form ID from various Google Forms URL formats
-    const urlObj = new URL(url);
-    const pathname = urlObj.pathname;
-    
-    // Format: /forms/u/0/d/e/[FORM_ID]/formResponse (submitted form)
-    if (pathname.includes('/forms/u/0/d/e/')) {
-      const match = pathname.match(/\/forms\/u\/\d+\/d\/e\/([^/]+)/);
-      if (match && match[1]) return match[1];
-    }
-    
-    // Format: /forms/d/e/[FORM_ID]/viewform
-    if (pathname.includes('/forms/d/e/')) {
-      const match = pathname.match(/\/forms\/d\/e\/([^/]+)/);
-      if (match && match[1]) return match[1];
-    }
-    
-    // Format: /forms/d/[FORM_ID]/viewform
-    if (pathname.includes('/forms/d/')) {
-      const match = pathname.match(/\/forms\/d\/([^/]+)/);
-      if (match && match[1]) return match[1];
-    }
-    
-    // If no match found, use the whole pathname as a fallback
-    return pathname.replace(/\//g, '_');
-  } catch (error) {
-    console.error('Error extracting form ID:', error);
-    // Generate a unique ID based on the URL string if extraction fails
-    return url.replace(/[^a-zA-Z0-9]/g, '_');
-  }
-}
-
 export interface FormData {
   id?: string;
   formId?: string;
@@ -45,8 +9,8 @@ export interface FormData {
   title: string;
   timestamp: number;
 }
-
 export interface SubmissionData {
+  formId?: string;
   formTitle: string;
   editUrl: string;
   timestamp: string;
@@ -56,7 +20,6 @@ export interface SubmissionData {
     type: string;
   }[];
 }
-
 export interface SavedFormResponse {
   formId: string;
   url: string;
@@ -69,7 +32,6 @@ export interface SavedFormResponse {
     type: string;
   }[];
 }
-
 @Injectable({
   providedIn: 'root'
 })
@@ -137,6 +99,7 @@ export class FormService {
       // Update the BehaviorSubject
       this.submittedFormsSubject.next(sortedSubmissions.map(sub => ({
         id: sub.editUrl,
+        formId: sub.formId,
         url: sub.editUrl,
         title: sub.formTitle || 'Unknown Form',
         timestamp: new Date(sub.timestamp).getTime()
@@ -174,39 +137,50 @@ export class FormService {
   }
 
   /**
-   * Updates local storage by removing a URL
+   * Updates local storage by removing a form or submission
    * This is used for optimistic UI updates
+   * @param formId The form ID to remove
+   * @param type The type of item to remove ('editing' or 'submission')
    */
-  private async updateLocalStorageAfterRemove(url: string): Promise<void> {
+  private async updateLocalStorageAfterRemove(formId: string, type: 'editing' | 'submission'): Promise<void> {
     try {
-      // Extract form ID from URL
-      const formId = extractFormId(url);
-      console.log('Extracted form ID for removal:', formId);
+      console.log(`Removing ${type} with form ID:`, formId);
       
-      // Get current URLs from storage
-      const result = await chrome.storage.local.get('formUrls');
-      const urls = result['formUrls'] || [];
-      
-      // Filter out the form with matching ID
-      const filteredUrls = urls.filter(item => item.formId !== formId);
-      
-      // Update storage with filtered URLs
-      await chrome.storage.local.set({ 'formUrls': filteredUrls });
-      
-      // Update the BehaviorSubject
-      const updatedForms = this.editingFormsSubject.value.filter(form => {
-        // Check if form has formId, if not fall back to URL comparison
-        if (form.formId) {
-          return form.formId !== formId;
-        } else {
-          return form.url !== url;
-        }
-      });
-      this.editingFormsSubject.next(updatedForms);
-      
-      console.log('Form removed from local storage. Form ID:', formId);
+      if (type === 'editing') {
+        // Get current URLs from storage
+        const result = await chrome.storage.local.get('formUrls');
+        const urls = result['formUrls'] || [];
+        
+        // Filter out the form with matching ID
+        const filteredUrls = urls.filter(item => item.formId !== formId);
+        
+        // Update storage with filtered URLs
+        await chrome.storage.local.set({ 'formUrls': filteredUrls });
+        
+        // Update the BehaviorSubject
+        const updatedForms = this.editingFormsSubject.value.filter(form => form.formId !== formId);
+        this.editingFormsSubject.next(updatedForms);
+        
+        console.log('Form removed from local storage. Form ID:', formId);
+      } else if (type === 'submission') {
+        // Get current submissions from storage
+        const result = await chrome.storage.local.get('formSubmissions');
+        const submissions = result['formSubmissions'] || [];
+        
+        // Filter out the submission with matching form ID
+        const filteredSubmissions = submissions.filter(item => item.formId !== formId);
+        
+        // Update storage with filtered submissions
+        await chrome.storage.local.set({ 'formSubmissions': filteredSubmissions });
+        
+        // Update the BehaviorSubject
+        const updatedSubmissions = this.submittedFormsSubject.value.filter(form => form.formId !== formId);
+        this.submittedFormsSubject.next(updatedSubmissions);
+        
+        console.log('Submission removed from local storage. Form ID:', formId);
+      }
     } catch (error) {
-      console.error('Error updating local storage:', error);
+      console.error(`Error updating local storage for ${type}:`, error);
       throw error; // Re-throw to allow caller to handle
     }
   }
@@ -312,20 +286,37 @@ export class FormService {
   }
 
   /**
-   * Removes a URL from local storage
+   * Removes a form from local storage
    * Also updates the badge count
    */
-  async removeUrl(url: string): Promise<void> {
+  async removeUrl(formId: string): Promise<void> {
     try {
       // Update local storage
-      await this.updateLocalStorageAfterRemove(url);
+      await this.updateLocalStorageAfterRemove(formId, 'editing');
       
-      console.log('URL successfully removed from local storage:', url);
+      console.log('Form successfully removed from local storage. Form ID:', formId);
       
       // Update the badge count after successful deletion
       this.updateBadgeCount();
     } catch (error) {
-      console.error('Error removing URL:', error);
+      console.error('Error removing form:', error);
+      throw error; // Re-throw to allow caller to handle
+    }
+  }
+
+  /**
+   * Removes a submission from local storage
+   */
+  async removeSubmission(formId: string): Promise<void> {
+    try {
+      // Update local storage
+      await this.updateLocalStorageAfterRemove(formId, 'submission');
+      
+      console.log('Submission successfully removed from local storage. Form ID:', formId);
+      
+      // No need to update badge count for submissions as they don't affect the badge
+    } catch (error) {
+      console.error('Error removing submission:', error);
       throw error; // Re-throw to allow caller to handle
     }
   }

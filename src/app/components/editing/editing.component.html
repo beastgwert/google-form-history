@@ -7,7 +7,7 @@
         <div #titleElement class="form-name" [title]="isTitleTruncated(formData, titleElement) ? getOriginalFormName(formData) : ''">{{ getFormName(formData) }}</div>
         <div class="form-date">{{ getFormattedDate(formData.timestamp) }}</div>
       </div>
-      <img src="assets/trash.svg" class="trash-icon" (click)="removeUrl(formData.url)">
+      <img src="assets/trash.svg" class="trash-icon" (click)="removeUrl(formData.formId)">
     </div>
   </div>
 </div>

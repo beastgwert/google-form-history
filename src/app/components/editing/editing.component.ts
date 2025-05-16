@@ -5,6 +5,7 @@ import { Subscription } from 'rxjs';
 
 // Local interface for component use - different from FormService's FormData
 interface FormItem {
+  formId: string;
   url: string;
   title: string;
   timestamp: string;
@@ -36,6 +37,7 @@ export class EditingComponent implements OnInit, OnDestroy {
     
     // Convert to the format expected by the component
     this.formUrls = forms.map(item => ({
+      formId: item.formId || '',
       url: item.url,
       title: item.title,
       timestamp: new Date(item.timestamp).toISOString()
@@ -48,6 +50,7 @@ export class EditingComponent implements OnInit, OnDestroy {
     // Subscribe to the editingForms$ observable to get updates when sorting changes
     this.subscription = this.formService.editingForms$.subscribe(updatedForms => {
       this.formUrls = updatedForms.map(item => ({
+        formId: item.formId || '',
         url: item.url,
         title: item.title,
         timestamp: new Date(item.timestamp).toISOString()
@@ -56,13 +59,9 @@ export class EditingComponent implements OnInit, OnDestroy {
     });
   }
 
-  async removeUrl(url: string) {
-    // Optimistic UI update - remove the URL from the UI immediately
-    this.formUrls = this.formUrls.filter(item => item.url !== url);
-    
-    // Then send the delete request to the cloud
-    this.formService.removeUrl(url).catch(error => {
-      console.error('Error removing URL:', error);
+  async removeUrl(formId: string) {
+    this.formService.removeUrl(formId).catch(error => {
+      console.error('Error removing form:', error);
       // If there's an error, reload the URLs to ensure UI is in sync
       this.loadUrls();
     });

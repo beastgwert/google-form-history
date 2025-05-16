@@ -3,7 +3,18 @@ import { CommonModule } from '@angular/common';
 import { FormService, SubmissionData } from '../../services/form.service';
 import { Subscription } from 'rxjs';
 
-// Using SubmissionData interface from FormService
+// Local interface for component use - different from FormService's SubmissionData
+interface SubmissionItem {
+  formId: string;
+  formTitle: string;
+  editUrl: string;
+  timestamp: string;
+  questions?: {
+    text: string;
+    answer: string;
+    type: string;
+  }[];
+}
 
 // Chrome extension API types
 declare const chrome: any;
@@ -16,7 +27,7 @@ declare const chrome: any;
   styleUrl: './submitted.component.css'
 })
 export class SubmittedComponent implements OnInit, OnDestroy {
-  submissions: SubmissionData[] = [];
+  submissions: SubmissionItem[] = [];
   private subscription: Subscription | undefined;
 
   constructor(private formService: FormService, private cdr: ChangeDetectorRef) {}
@@ -27,7 +38,17 @@ export class SubmittedComponent implements OnInit, OnDestroy {
 
   async loadSubmissions() {
     console.log("Loading submissions...");
-    this.submissions = await this.formService.getSubmissions();
+    const submissionData = await this.formService.getSubmissions();
+    
+    // Convert to the format expected by the component
+    this.submissions = submissionData.map(sub => ({
+      formId: sub.formId || '',
+      formTitle: sub.formTitle,
+      editUrl: sub.editUrl,
+      timestamp: sub.timestamp,
+      questions: sub.questions
+    }));
+    
     console.log("Loaded submissions: ", this.submissions);
     // Manually trigger change detection
     this.cdr.detectChanges();
@@ -35,16 +56,20 @@ export class SubmittedComponent implements OnInit, OnDestroy {
     // Subscribe to the submittedForms$ observable to get updates when sorting changes
     this.subscription = this.formService.submittedForms$.subscribe(updatedForms => {
       this.submissions = updatedForms.map(form => ({
+        formId: form.formId || '',
         formTitle: form.title,
         editUrl: form.url,
-        timestamp: new Date(form.timestamp).toISOString()
+        timestamp: new Date(form.timestamp).toISOString(),
+        questions: undefined
       }));
       this.cdr.detectChanges();
     });
   }
+  
+
 
   // Store original title to use for tooltip if needed
-  getOriginalFormName(submission: SubmissionData): string {
+  getOriginalFormName(submission: SubmissionItem): string {
     // Use the title if available, otherwise extract from URL
     if (submission.formTitle && submission.formTitle !== 'Unknown Form') {
       return submission.formTitle;
@@ -60,13 +85,13 @@ export class SubmittedComponent implements OnInit, OnDestroy {
     }
   }
 
-  getFormName(submission: SubmissionData): string {
+  getFormName(submission: SubmissionItem): string {
     // Just return the original name - truncation will be handled by CSS
     return this.getOriginalFormName(submission);
   }
   
   // This will be called from the template to check if title should show tooltip
-  isTitleTruncated(submission: SubmissionData, element?: HTMLElement): boolean {
+  isTitleTruncated(submission: SubmissionItem, element?: HTMLElement): boolean {
     if (element) {
       // DOM-based overflow detection
       return element.offsetWidth < element.scrollWidth;
@@ -80,7 +105,7 @@ export class SubmittedComponent implements OnInit, OnDestroy {
     return this.formService.formatDate(timestamp);
   }
 
-  openForm(submission: SubmissionData) {
+  openForm(submission: SubmissionItem) {
     // If we have an editUrl, use it to open the form
     if (submission.editUrl) {
       chrome.tabs.create({ url: submission.editUrl });
@@ -95,8 +120,20 @@ export class SubmittedComponent implements OnInit, OnDestroy {
     }
   }
   
+  async removeSubmission(formId: string, event: MouseEvent) {
+    // Stop the click event from propagating to the parent element
+    // This prevents the openForm method from being called
+    event.stopPropagation();
+    
+    this.formService.removeSubmission(formId).catch(error => {
+      console.error('Error removing submission:', error);
+      // If there's an error, reload the submissions to ensure UI is in sync
+      this.loadSubmissions();
+    });
+  }
+  
   // Method to display submission details when no edit link is available
-  showSubmissionDetails(submission: SubmissionData) {
+  showSubmissionDetails(submission: SubmissionItem) {
     // For now, we'll just use an alert to show the questions and answers
     // This could be enhanced to use a modal dialog in the future
     let message = `Form: ${submission.formTitle}\n`;
