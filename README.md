@@ -2,7 +2,7 @@
 
 Chrome extension that allows you to save form responses before submission and keeps a history of both in-progress and submitted forms.
 
-![Google Form Tracker Demo](public/demo.png)
+![Google Form Tracker Demo](./public/demo.png)
 
 Try it yourself:
 1. Clone this repository
