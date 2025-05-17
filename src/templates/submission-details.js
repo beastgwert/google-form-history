@@ -1,19 +1,11 @@
-// This script will be executed in the context of the new tab
-// It will parse the URL parameters and populate the HTML template
-
 document.addEventListener('DOMContentLoaded', function() {
-  // Get the URL parameters
   const urlParams = new URLSearchParams(window.location.search);
   const submissionData = JSON.parse(decodeURIComponent(urlParams.get('data')));
   
-  // Populate the form title, description, and submission date
   const formTitle = submissionData.formTitle;
   document.getElementById('formTitle').textContent = formTitle;
-  
-  // Set the page title to match the form title
   document.title = formTitle;
   
-  // Display the description if available
   const descriptionElement = document.getElementById('formDescription');
   if (submissionData.description && submissionData.description.trim() !== '') {
     descriptionElement.textContent = submissionData.description;
@@ -24,7 +16,6 @@ document.addEventListener('DOMContentLoaded', function() {
   
   document.getElementById('submissionDate').textContent = 'Submitted: ' + submissionData.formattedDate;
   
-  // Populate the responses
   const responsesContainer = document.getElementById('responses-container');
   
   if (submissionData.questions && submissionData.questions.length > 0) {
