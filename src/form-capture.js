@@ -69,6 +69,8 @@ function extractFormData() {
   const hiddenInputs = document.querySelectorAll('input[type="hidden"]');
   
   // Process individual entry inputs (entry.{id}) - these only exist on the current page
+  const entryValues = new Map();
+  
   hiddenInputs.forEach(input => {
     const name = input.getAttribute('name');
     const value = input.getAttribute('value');
@@ -77,10 +79,22 @@ function extractFormData() {
       const entryId = name.replace('entry.', '');
       
       if (questionMap.has(entryId)) {
-        // console.log(`Found hidden input for question ID ${entryId} with value: ${value}`);
-        const question = questionMap.get(entryId);
-        question.answer = value;
+        // If this entry ID already has values, add to the array, otherwise create a new array
+        if (entryValues.has(entryId)) {
+          entryValues.get(entryId).push(value);
+        } else {
+          entryValues.set(entryId, [value]);
+        }
       }
+    }
+  });
+  
+  // Now set the answers in the questionMap using the collected values
+  entryValues.forEach((values, entryId) => {
+    if (questionMap.has(entryId)) {
+      const question = questionMap.get(entryId);
+      // Join multiple values with commas (for checkbox questions)
+      question.answer = values.join(', ');
     }
   });
   
