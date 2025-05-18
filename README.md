@@ -1,4 +1,4 @@
-# Google Form Tracker
+# [Google Form Tracker](https://chromewebstore.google.com/detail/google-form-tracker/icgmfflonhkdeafnmbjjkbhnmgfkgnbb)
 
 Chrome extension that allows you to save form responses before submission and keeps a history of both in-progress and submitted forms.
 
