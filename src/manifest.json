@@ -1,8 +1,8 @@
 {
     "manifest_version": 3,
-    "version": "1.0.1",
+    "version": "1.0.3",
     "name": "Google Form Tracker",
-    "description": "Are you tired of scrolling through your inbox to find your Google Form responses that may or may not even exist?",
+    "description": "Track in-progress Google Forms and save responses",
     "icons": {
         "16": "icon16.png",
         "32": "icon32.png",
