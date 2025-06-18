@@ -224,7 +224,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
       }
       
       // Case 2: Form submission - delete the form URL and run submission-capture.js
-      else if (tab.url.includes('formResponse') && tab.url.includes('/u/0')) {
+      else if (tab.url.includes('formResponse') && /\/u\/\d+\/d\/e/.test(tab.url)) {
         console.log("Google Form submission detected: " + tab.url);
         
         deleteUrl(tab.url);
