@@ -38,6 +38,7 @@
 
 .submission-info {
   flex: 1;
+  overflow: hidden;
 }
 
 .submission-title {
