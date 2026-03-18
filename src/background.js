@@ -103,15 +103,12 @@ function updateBadge(count) {
 
 // Initialize local storage when extension is loaded
 chrome.runtime.onInstalled.addListener(async () => {
-  const storage = await chrome.storage.local.get(['formUrls', 'formSubmissions', 'savedFormResponses']);
+  const storage = await chrome.storage.local.get(['formUrls', 'formSubmissions']);
   if (!storage.formUrls) {
     await chrome.storage.local.set({ 'formUrls': [] });
   }
   if (!storage.formSubmissions) {
     await chrome.storage.local.set({ 'formSubmissions': [] });
-  }
-  if (!storage.savedFormResponses) {
-    await chrome.storage.local.set({ 'savedFormResponses': [] });
   }
   updateLocalStorage();
 });
@@ -119,7 +116,7 @@ chrome.runtime.onInstalled.addListener(async () => {
 // Add submission to local storage
 async function addSubmission(editUrl, formId, formTitle, questions = null, description = '') {
   try {
-    console.log('Adding submission to local storage:', formId);
+    console.log('Adding submission to local storage:', formId, formTitle, questions, description);
     
     const storage = await chrome.storage.local.get('formSubmissions');
     const formSubmissions = storage.formSubmissions || [];
@@ -156,29 +153,20 @@ async function addSubmission(editUrl, formId, formTitle, questions = null, descr
   }
 }
 
-async function saveFormResponses(formData) {
+// Update the edit URL of an existing submission
+async function updateSubmissionEditUrl(formId, editUrl) {
   try {
-    const storage = await chrome.storage.local.get('savedFormResponses');
-    const savedResponses = storage.savedFormResponses || [];
+    const storage = await chrome.storage.local.get('formSubmissions');
+    const formSubmissions = storage.formSubmissions || [];
     
-    // Add timestamp to the form data
-    const responseWithTimestamp = {
-      ...formData,
-      timestamp: new Date().toISOString(),
-      status: 'saved' 
-    };
-    
-    const existingIndex = savedResponses.findIndex(response => response.formId === formData.formId);
-    if (existingIndex !== -1) {
-      savedResponses[existingIndex] = responseWithTimestamp;
-    } else {
-      savedResponses.push(responseWithTimestamp);
+    const existingIndex = formSubmissions.findIndex(item => item.formId === formId);
+    if (existingIndex >= 0) {
+      formSubmissions[existingIndex].editUrl = editUrl;
+      await chrome.storage.local.set({ 'formSubmissions': formSubmissions });
     }
-    
-    await chrome.storage.local.set({ 'savedFormResponses': savedResponses });
     return true;
   } catch (error) {
-    console.error('Error saving form responses:', error);
+    console.error('Error updating submission edit URL:', error);
     return false;
   }
 }
@@ -197,13 +185,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       .catch(error => sendResponse({ success: false, error: error.message }));
     return true;
   }
-  if (message.action === 'saveFormResponses') {
-    // console.log('Received saveFormResponses request:', message);
-    const formData = {
-      ...message.formData,
-      description: message.formData.description || ''
-    };
-    saveFormResponses(formData)
+  if (message.action === 'updateSubmissionEditUrl') {
+    updateSubmissionEditUrl(message.formId, message.editUrl)
       .then(result => sendResponse({ success: result }))
       .catch(error => sendResponse({ success: false, error: error.message }));
     return true;

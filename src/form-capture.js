@@ -1,4 +1,4 @@
-// Content script to add a "Save Responses" button to Google Forms
+// Content script to capture form data when user clicks Submit on Google Forms
 
 // Extract form data (questions and responses)
 function extractFormData() {
@@ -68,37 +68,8 @@ function extractFormData() {
   // Get all hidden input fields for responses
   const hiddenInputs = document.querySelectorAll('input[type="hidden"]');
   
-  // Process individual entry inputs (entry.{id}) - these only exist on the current page
-  const entryValues = new Map();
-  
-  hiddenInputs.forEach(input => {
-    const name = input.getAttribute('name');
-    const value = input.getAttribute('value');
-    
-    if (name && name.startsWith('entry.')) {
-      const entryId = name.replace('entry.', '');
-      
-      if (questionMap.has(entryId)) {
-        // If this entry ID already has values, add to the array, otherwise create a new array
-        if (entryValues.has(entryId)) {
-          entryValues.get(entryId).push(value);
-        } else {
-          entryValues.set(entryId, [value]);
-        }
-      }
-    }
-  });
-  
-  // Now set the answers in the questionMap using the collected values
-  entryValues.forEach((values, entryId) => {
-    if (questionMap.has(entryId)) {
-      const question = questionMap.get(entryId);
-      // Join multiple values with commas (for checkbox questions)
-      question.answer = values.join(', ');
-    }
-  });
-  
-  // Check for partialResponse - contains responses from previous pages
+  // Process partialResponse first - contains responses from previous pages
+  // (and possibly stale values for current page questions when editing a submitted form)
   const partialResponseInput = Array.from(hiddenInputs).find(input => 
     input.getAttribute('name') === 'partialResponse'
   );
@@ -137,6 +108,36 @@ function extractFormData() {
     }
   }
   
+  // Process individual entry inputs (entry.{id}) - these only exist on the current page
+  const entryValues = new Map();
+  
+  hiddenInputs.forEach(input => {
+    const name = input.getAttribute('name');
+    const value = input.getAttribute('value');
+    
+    if (name && name.startsWith('entry.')) {
+      const entryId = name.replace('entry.', '');
+      
+      if (questionMap.has(entryId)) {
+        // If this entry ID already has values, add to the array, otherwise create a new array
+        if (entryValues.has(entryId)) {
+          entryValues.get(entryId).push(value);
+        } else {
+          entryValues.set(entryId, [value]);
+        }
+      }
+    }
+  });
+  
+  // Now set the answers in the questionMap using the collected values
+  entryValues.forEach((values, entryId) => {
+    if (questionMap.has(entryId)) {
+      const question = questionMap.get(entryId);
+      // Join multiple values with commas (for checkbox questions)
+      question.answer = values.join(', ');
+    }
+  });
+  
   // Convert the question map to an array for our formData
   formData.questions = Array.from(questionMap.values());
   return formData;
@@ -165,86 +166,49 @@ function extractFormId(url) {
   return null;
 }
 
-function addSaveButton() {
-  // Find the span with "Clear form" text
+function interceptSubmitButton() {
   const allSpans = document.querySelectorAll('span');
-  let clearFormSpan = null;
-  
+  let submitSpan = null;
+
   for (const span of allSpans) {
-    if (span.textContent === 'Clear form') {
-      clearFormSpan = span;
+    if (span.textContent === 'Submit') {
+      submitSpan = span;
       break;
     }
   }
-  
-  // If we found the "Clear form" span
-  if (clearFormSpan) {
-    let currentElement = clearFormSpan;
-    let buttonElement = null;
-    
-    // Look for corresponding div with button role
-    while (currentElement && !buttonElement) {
-      if (currentElement.getAttribute('role') === 'button') {
-        buttonElement = currentElement;
-        break;
-      }
-  
-      if (!buttonElement) {
-        currentElement = currentElement.parentNode;
-      }
-    }
-    
-    // Find the parent container to insert our button
-    const parentContainer = buttonElement.parentNode;
-    
-    if (parentContainer) {
-      const saveButton = document.createElement('div');
-      saveButton.setAttribute('role', 'button');
-      saveButton.textContent = 'Save';
-      saveButton.style.marginRight = '1rem';
-      
-      if (buttonElement.classList && buttonElement.classList.length) {
-        buttonElement.classList.forEach(className => {
-          saveButton.classList.add(className);
-        });
-      }
 
-      parentContainer.insertBefore(saveButton, buttonElement);
-      saveButton.addEventListener('click', function(event) {
-        event.preventDefault();
-        event.stopPropagation();
-        
-        const formData = extractFormData();
-        chrome.runtime.sendMessage({
-          action: 'saveFormResponses',
-          formData: formData
-        }, response => {
-          // console.log('Response from background script:', response);
-          alert('Your responses have been saved! You can now safely submit.' );
-        });
-      });
-    } else {
-      console.error('Could not find parent container for the "Clear form" span');
-    }
-  } else {
-    console.error('Could not find "Clear form" span');
-  }
-}
+  if (!submitSpan) return;
 
-function checkForSubmitButton() {
-  const allSpans = document.querySelectorAll('span');
-  for (const span of allSpans) {
-    if (span.textContent === 'Submit') {
-      return true;
+  // Walk up from the span to find the element with role="button"
+  let currentElement = submitSpan;
+  let buttonElement = null;
+
+  while (currentElement && !buttonElement) {
+    if (currentElement.getAttribute && currentElement.getAttribute('role') === 'button') {
+      buttonElement = currentElement;
+      break;
     }
+    currentElement = currentElement.parentNode;
   }
-  return false;
+
+  if (!buttonElement) return;
+
+  // Use capture phase so our handler runs before Google's submission handler
+  buttonElement.addEventListener('click', function() {
+    const formData = extractFormData();
+    chrome.runtime.sendMessage({
+      action: 'uploadSubmission',
+      formId: formData.formId,
+      formTitle: formData.title,
+      description: formData.description,
+      questions: formData.questions,
+      editUrl: ''
+    });
+  }, true);
 }
 
 function initialize() {
-  if (checkForSubmitButton()) {
-    addSaveButton();
-  }
+  interceptSubmitButton();
 }
 
 initialize();
